@@ -17,6 +17,15 @@ class BaseModel(ABC):
     def parameters(self):
         return self.__modules.parameters()
 
+    def train(self, mode=True):
+        self.__modules.train(mode=mode)
+
+    def eval(self):
+        self.__modules.eval()
+
+    def predict(self, x):
+        return self.__modules(x)
+
     @abstractmethod
     def forward(self, x):
         raise NotImplementedError
