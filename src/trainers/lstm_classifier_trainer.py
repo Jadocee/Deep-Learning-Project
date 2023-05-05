@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, overload
 
 from datasets import Dataset
 from nltk.lm import Vocabulary
@@ -10,25 +10,31 @@ from torch.optim import Adam
 from torch.utils.data import DataLoader
 
 from models.lstm_model import LSTMModel
+from trainers.base_trainer import BaseTrainer
 from utils.data_processing_utils import DataProcessingUtils
 from utils.dataset_loader import DatasetLoader
 from utils.definitions import TWEET_TOPIC_SINGLE, TWEET_TOPIC_SINGLE_TRAIN_SPLIT, TWEET_TOPIC_SINGLE_TEST_SPLIT
 
 
-class LSTMClassifierTrainer:
-    __device: str
+class LSTMClassifierTrainer(BaseTrainer):
+
+    def save(self):
+        raise NotImplementedError
+
+    def load(self):
+        raise NotImplementedError
 
     def __init__(self, device: str = "cpu") -> None:
-        self.__device = device
+        super().__init__(device=device)
 
-    def train(self, model: LSTMModel, dataloader: DataLoader, optimizer: Adam, loss_fn: CrossEntropyLoss, device: str) \
-            -> Tuple[ndarray, ndarray]:
+    def train(self, model: LSTMModel, dataloader: DataLoader, optimizer: Adam, loss_fn: CrossEntropyLoss) \
+            -> Tuple[float, float]:
         model.train()
         losses: List[float] = list()
         accuracies: List[float] = list()
         for batch in dataloader:
-            x: Tensor = batch["ids"].to(device)
-            y: Tensor = batch["label"].to(device)
+            x: Tensor = batch["ids"].to(self._device)
+            y: Tensor = batch["label"].to(self._device)
             optimizer.zero_grad()
             y_pred: Tensor = model.forward(x)
             loss: Tensor = loss_fn(y_pred, y)
@@ -39,21 +45,24 @@ class LSTMClassifierTrainer:
             accuracies.append(accuracy.detach().cpu().numpy())
         return mean(losses), mean(accuracies)
 
-    def evaluate(self, model: LSTMModel, dataloader: DataLoader, loss_fn: CrossEntropyLoss, device: str) \
+    def evaluate(self, model: LSTMModel, dataloader: DataLoader, loss_fn: CrossEntropyLoss) \
             -> Tuple[float, float]:
         model.eval()
         losses: List[float] = list()
         accuracies: List[float] = list()
         with no_grad():
             for batch in dataloader:
-                x: Tensor = batch["ids"].to(device)
-                y: Tensor = batch["label"].to(device)
+                x: Tensor = batch["ids"].to(self._device)
+                y: Tensor = batch["label"].to(self._device)
                 y_pred: Tensor = model.forward(x)
                 loss: Tensor = loss_fn(y_pred, y)
                 losses.append(loss.detach().cpu().numpy())
                 accuracy: Tensor = t_sum((y_pred.argmax(dim=1) == y)) / y.shape[0]
                 accuracies.append(accuracy.detach().cpu().numpy())
         return mean(losses), mean(accuracies)
+
+    def test(self):
+        raise NotImplementedError
 
     def __collate(self, batch) -> dict:
         raise NotImplementedError
@@ -104,9 +113,8 @@ class LSTMClassifierTrainer:
         valid_accuracies: List[float] = list()
         for epoch in range(epochs):
             train_loss, train_acc = self.train(model=model, dataloader=train_dataloader, optimizer=optimizer,
-                                               loss_fn=loss_fn, device=self.__device)
-            valid_loss, valid_acc = self.evaluate(model=model, dataloader=valid_dataloader, loss_fn=loss_fn,
-                                                  device=self.__device)
+                                               loss_fn=loss_fn)
+            valid_loss, valid_acc = self.evaluate(model=model, dataloader=valid_dataloader, loss_fn=loss_fn)
             train_losses.append(train_loss)
             train_accuracies.append(train_acc)
             valid_losses.append(valid_loss)
@@ -115,8 +123,7 @@ class LSTMClassifierTrainer:
                   f"Valid Loss: {valid_loss:.3f}, Valid Accuracy: {valid_acc * 100:.2f}%")
 
         # Evaluate the model on the test set
-        test_loss, test_acc = self.evaluate(model=model, dataloader=test_dataloader, loss_fn=loss_fn,
-                                            device=self.__device)
+        test_loss, test_acc = self.evaluate(model=model, dataloader=test_dataloader, loss_fn=loss_fn)
         print(f"Test Loss: {test_loss:.3f}, Test Accuracy: {test_acc * 100:.2f}%")
 
         # TODO: Save performance metrics to dictionary
