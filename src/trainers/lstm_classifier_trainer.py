@@ -1,8 +1,7 @@
-from typing import List, Tuple, overload
+from typing import List, Tuple
 
-from datasets import Dataset
 from nltk.lm import Vocabulary
-from numpy import mean, ndarray
+from numpy import mean
 from torch import Tensor, no_grad
 from torch import sum as t_sum
 from torch.nn import CrossEntropyLoss

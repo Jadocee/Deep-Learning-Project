@@ -9,7 +9,6 @@ from models.base_model import BaseModel
 
 
 class BaseTrainer(ABC):
-
     _device: str
 
     def __init__(self, device: str = "cpu") -> None:

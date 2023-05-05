@@ -1,8 +1,8 @@
 from unittest import TestCase
 
-from utils.dataset_loader import DatasetLoader
-from datasets import load_dataset, load_dataset_builder, get_dataset_split_names
+from datasets import load_dataset_builder
 
+from utils.dataset_loader import DatasetLoader
 from utils.definitions import TWEET_TOPIC_SINGLE, TWEET_TOPIC_SINGLE_TRAIN_SPLIT, TWEET_TOPIC_SINGLE_TEST_SPLIT
 
 
@@ -19,8 +19,3 @@ class TestDatasetLoader(TestCase):
         print(train_data)
         print(valid_data)
         print(test_data)
-
-
-
-
-
