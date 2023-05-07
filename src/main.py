@@ -1,49 +1,111 @@
 from os import system, name
 from typing import Dict
 
+from nltk import download
+from torch.cuda import is_available as has_cuda
+
+from optimisers.lstm_classifier_optimiser import LSTMClassifierOptimiser
+
 
 class Main:
     MENUS: Dict[str, Dict[int, str]] = {
         "Main Menu": {
             1: "Image Classifier",
             2: "Tweet Classifier",
+            3: "Download NLTK Data",
+            4: "Check CUDA Availability",
+        },
+        "Image Classifier Menu": {
+            1: "TODO",
         },
         "Tweet Classifier Menu": {
-            1: "Train",
-            2: "Test",
-            3: "Predict",
-        }
+            1: "LSTM Trainer",
+        },
+        "LSTM Trainer Menu": {
+            1: "Optimise Hyperparameters",
+        },
     }
 
     def __init__(self) -> None:
         raise Exception("This class is not meant to be instantiated")
 
     @staticmethod
-    def __print_menu(menu: str) -> str:
-        if menu not in Main.MENUS.keys():
-            raise Exception("Unknown menu")
+    def __display_menu(menu_name: str) -> None:
+        if menu_name not in Main.MENUS.keys():
+            raise Exception(f"Unknown menu: {menu_name}")
 
-        for key, value in Main.MENUS[menu].items():
+        menu: Dict[int, str] = Main.MENUS[menu_name]
+        print(f"--- {menu_name} ---")
+        for key, value in menu.items():
             print(f"{key}. {value}")
-        print("0. Main Menu")
-        print("-1. Exit")
-        choice: int = int(input("Enter choice: "))
-        if choice == -1:
-            print("Exiting...")
-            exit(0)
-        elif choice == 0:
-            return "Main Menu"
-        elif choice not in Main.MENUS[menu].keys():
-            print("Invalid choice. Try again.")
-            system("cls" if name == "nt" else "clear")
-            Main.__print_menu(menu)
-        return Main.MENUS[menu][choice]
+        if menu_name != "Main Menu":
+            print("0. Main Menu")
+        print("-1. Exit", end="\n\n")
+
+    @staticmethod
+    def switch_menu():
+        current_menu = "Main Menu"
+
+        while True:
+            Main.__display_menu(current_menu)
+            choice: int = int(input("Enter choice: "))
+            print("\n")
+
+            if choice == -1:
+                print("Exiting...")
+                break
+
+            if current_menu == "Main Menu":
+                if choice == 1:
+                    current_menu = "Image Classifier Menu"
+                elif choice == 2:
+                    current_menu = "Tweet Classifier Menu"
+                elif choice == 3:
+                    download("stopwords")
+                    download("punkt")
+                    download("wordnet")
+                elif choice == 4:
+                    print(f"CUDA is {'available' if has_cuda() else 'not available'}")
+                    input("Press any key to continue...")
+                    system("cls" if name == "nt" else "clear")
+                else:
+                    print("Invalid choice. Try again.")
+                    system("cls" if name == "nt" else "clear")
+            elif current_menu == "Tweet Classifier Menu":
+                if choice == 0:
+                    current_menu = "Main Menu"
+                elif choice == 1:
+                    current_menu = "LSTM Trainer Menu"
+                else:
+                    print("Invalid choice. Try again.")
+                    system("cls" if name == "nt" else "clear")
+            elif current_menu == "LSTM Trainer Menu":
+                if choice == 0:
+                    current_menu = "Main Menu"
+                elif choice == 1:
+                    system("cls" if name == "nt" else "clear")
+                    optimiser: LSTMClassifierOptimiser = LSTMClassifierOptimiser()
+                    optimiser.run()
+                else:
+                    print("Invalid choice. Try again.")
+                    system("cls" if name == "nt" else "clear")
+            elif current_menu == "Image Classifier Menu":
+                if choice == 0:
+                    current_menu = "Main Menu"
+                else:
+                    print("Invalid choice. Try again.")
+                    system("cls" if name == "nt" else "clear")
+
+            print("\n")
 
     @staticmethod
     def main() -> None:
-        next_menu: str = Main.__print_menu("Main Menu")
-        Main.__print_menu(next_menu)
+        Main.switch_menu()
         # TODO: Implement menu functionality
+        # TODO: Add option to download nltk data (stopwords, etc.)
+        # Temporary solution: uncomment the following line to download missing NLTK stopwords
+        # nltk.download("stopwords")
+        # nltk.download("punkt")
 
 
 if __name__ == '__main__':
