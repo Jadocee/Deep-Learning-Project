@@ -5,16 +5,33 @@ from models.base_model import BaseModel
 
 
 class LSTMModel(BaseModel):
-    def __init__(self, vocab_size: int, embedding_dim: int, input_size: int, output_size: int, hidden_size: int,
-                 n_layers: int, pad_idx: int, bidirectional: bool = True):
+    def __init__(self, vocab_size: int, embedding_dim: int, output_size: int, hidden_size: int, n_layers: int,
+                 pad_idx: int, bidirectional: bool = True):
+        """
+        LSTM model for text classification.
+        :param vocab_size: The size of the vocabulary.
+        :param embedding_dim: The dimension of the word embeddings and the size of the input feature vector (the input
+        to the LSTM layer is the output of the Embedding layer).
+        :param output_size: The size of the output feature vector (number of classes).
+        :param hidden_size: The number of hidden units in the LSTM layers.
+        :param n_layers: The number of layers in the LSTM.
+        :param pad_idx: The index of the padding token in the vocabulary.
+        :param bidirectional: Whether to use a bidirectional LSTM. If a bidirectional LSTM is used, the output size of
+        the LSTM layer is doubled, thus, the input size of the Linear layer is also doubled.
+        """
         super().__init__()
         self._add_modules(
             Embedding(num_embeddings=vocab_size, embedding_dim=embedding_dim, padding_idx=pad_idx),
-            LSTM(input_size=input_size, hidden_size=n_layers, num_layers=n_layers, bidirectional=bidirectional),
-            Linear(in_features=hidden_size, out_features=output_size)
+            LSTM(input_size=embedding_dim, hidden_size=hidden_size, num_layers=n_layers, bidirectional=bidirectional),
+            Linear(in_features=hidden_size * 2 if bidirectional else hidden_size, out_features=output_size)
         )
 
     def forward(self, x: Tensor) -> Tensor:
+        """
+        Forward pass.
+        :param x: The input tensor, of shape (batch_size, max_tokens).
+        :return: The output tensor, of shape (batch_size, output_size).
+        """
         x = self.__modules[0](x)
         x, _ = self.__modules[1](x)
         x = amax(x, dim=1)

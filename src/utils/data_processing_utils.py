@@ -8,13 +8,12 @@ from nltk.corpus import stopwords
 from nltk.lm import Vocabulary
 from torchtext.vocab import build_vocab_from_iterator, Vocab
 
-STOP_WORDS: Set[str] = set(stopwords.words("english"))
-"""
-A set of stop words from the nltk library.
-"""
-
 
 class DataProcessingUtils:
+    STOP_WORDS: Set[str] = set(stopwords.words("english"))
+    """
+    A set of stop words from the nltk library.
+    """
 
     @staticmethod
     def standardise_text(text: str, max_tokens: int, lemmatise: bool = True, stem: bool = False) -> List[str]:
@@ -28,7 +27,7 @@ class DataProcessingUtils:
         tokens: List[str] = word_tokenize(text=text, language="english")
 
         # Remove stop words
-        tokens = [token for token in tokens if token not in STOP_WORDS]
+        tokens = [token for token in tokens if token not in DataProcessingUtils.STOP_WORDS]
 
         # Finalise
         if lemmatise and stem:
