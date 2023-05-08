@@ -59,3 +59,9 @@ class DataProcessingUtils:
     def vocabularise_text(tokens: List[str], vocab: Vocabulary) -> List[int]:
         ids = [vocab[token] for token in tokens]
         return ids
+
+    @staticmethod
+    def numericalize_data(example, vocab):
+        ids = [vocab[token] for token in example['tokens']]
+        return {'ids': ids}
+
