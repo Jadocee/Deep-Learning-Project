@@ -9,7 +9,7 @@ from optuna.pruners import MedianPruner, NopPruner
 from optuna.trial import FrozenTrial, TrialState
 from pandas import DataFrame
 
-from utils.definitions import OUT_DIR
+from utils.definitions import STUDIES_DIR
 
 
 class BaseOptimiser(ABC):
@@ -62,7 +62,7 @@ class BaseOptimiser(ABC):
                 print(f"\t{key}: {value}")
 
             df: DataFrame = study.trials_dataframe()
-            out_csv: str = f"{OUT_DIR}/studies/{study.study_name}.csv"
+            out_csv: str = f"{STUDIES_DIR}/{study.study_name}.csv"
             df.to_csv(out_csv, index=False)
             print(f"Saved results to {out_csv}")
 

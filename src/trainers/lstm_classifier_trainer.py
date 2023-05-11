@@ -1,4 +1,4 @@
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Union, Dict
 
 import torch.optim as optim
 from numpy import mean, float64, ndarray
@@ -7,7 +7,8 @@ from optuna.exceptions import TrialPruned
 from torch import Tensor, no_grad
 from torch import sum as t_sum
 from torch.nn import CrossEntropyLoss
-from torch.optim import Optimizer
+from torch.optim import Optimizer, lr_scheduler
+from torch.optim.lr_scheduler import LRScheduler, ReduceLROnPlateau
 from torch.utils.data import DataLoader
 from torchtext.vocab import Vocab
 
@@ -26,7 +27,7 @@ class LSTMClassifierTrainer(BaseTrainer):
         self.__vocab = vocab
         self.__pad_index = vocab["<pad>"]
 
-    def train(self, model: LSTMModel, dataloader: DataLoader, optimiser: Optimizer, loss_fn: CrossEntropyLoss) \
+    def train(self, model: LSTMModel, dataloader: DataLoader, loss_fn: CrossEntropyLoss, optimiser: Optimizer) \
             -> Tuple[float64, float64]:
         model.train()
         losses: List[ndarray] = list()
@@ -79,7 +80,10 @@ class LSTMClassifierTrainer(BaseTrainer):
             learning_rate: float = 0.01,
             max_tokens: int = 600,
             trial: Optional[Trial] = None,
-            optimiser_name: str = "adam"
+            optimiser_name: str = "Adam",
+            lr_scheduler_name: Optional[str] = None,
+            # lr_decay: Optional[float] = None,
+            kwargs: Optional[Dict] = None
             ) -> float:
 
         # TODO: Move this method to the base trainer class
@@ -94,8 +98,10 @@ class LSTMClassifierTrainer(BaseTrainer):
         if (max_tokens < 1) or (not isinstance(max_tokens, int)):
             raise ValueError(f"Invalid max tokens: {max_tokens}")
 
-        # Set up the optimiser
+        # Set up the optimiser and scheduler
         optimiser: Optimizer = getattr(optim, optimiser_name)(model.parameters, lr=learning_rate)
+        scheduler: Union[LRScheduler, None] = getattr(lr_scheduler, lr_scheduler_name)(optimiser, **kwargs) \
+            if lr_scheduler_name else None
 
         loss_fn: CrossEntropyLoss = CrossEntropyLoss()
         train_losses: List[float] = list()
@@ -120,6 +126,9 @@ class LSTMClassifierTrainer(BaseTrainer):
             else:
                 print(f"Epoch: {epoch + 1:02}, Train Loss: {train_loss:.3f}, Train Accuracy: {train_acc * 100:.2f}%, "
                       f"Valid Loss: {valid_loss:.3f}, Valid Accuracy: {valid_acc * 100:.2f}%")
+
+            if scheduler:
+                scheduler.step(valid_loss) if isinstance(scheduler, ReduceLROnPlateau) else scheduler.step()
 
         return valid_accuracies[-1]
 

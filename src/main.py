@@ -1,10 +1,12 @@
-from os import system, name
+from os import system, name, mkdir
+from os.path import exists
 from typing import Dict
 
-from nltk import download
+from nltk.downloader import download
 from torch.cuda import is_available as has_cuda
 
 from optimisers.lstm_classifier_optimiser import LSTMClassifierOptimiser
+from utils.definitions import STUDIES_DIR, MODELS_DIR
 
 
 class Main:
@@ -14,7 +16,7 @@ class Main:
         "Main Menu": {
             1: "Image Classifier",
             2: "Tweet Classifier",
-            3: "Download NLTK Data",
+            3: f"Download NLTK Data",
             4: "Check CUDA Availability",
         },
         "Image Classifier Menu": {
@@ -45,7 +47,7 @@ class Main:
         print("-1. Exit", end="\n\n")
 
     @staticmethod
-    def switch_menu():
+    def __switch_menu():
         current_menu = "Main Menu"
 
         while True:
@@ -87,7 +89,7 @@ class Main:
                     system("cls" if name == "nt" else "clear")
                     study_name: str = input("Enter study name or press enter to use default: ")
                     optimiser: LSTMClassifierOptimiser = LSTMClassifierOptimiser(device=Main.DEVICE)
-                    optimiser.run(study_name=study_name if study_name != "" else None)
+                    optimiser.run(study_name=study_name if study_name != "" else None, prune=True)
                 else:
                     print("Invalid choice. Try again.")
                     system("cls" if name == "nt" else "clear")
@@ -101,8 +103,19 @@ class Main:
             print("\n")
 
     @staticmethod
+    def __initial_setup() -> None:
+        # Make sure directories in definitions exist
+        if not exists(STUDIES_DIR):
+            print(f"Creating directory: {STUDIES_DIR}")
+            mkdir(STUDIES_DIR)
+        if not exists(MODELS_DIR):
+            print(f"Creating directory: {MODELS_DIR}")
+            mkdir(MODELS_DIR)
+
+    @staticmethod
     def main() -> None:
-        Main.switch_menu()
+        Main.__initial_setup()
+        Main.__switch_menu()
         # torch.zeros(1).cuda()
 
 

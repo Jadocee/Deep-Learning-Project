@@ -14,3 +14,13 @@ OUT_DIR: str = f"{ROOT}/out"
 """
 The directory where the output files are stored.
 """
+
+MODELS_DIR: str = f"{OUT_DIR}/models"
+"""
+The directory for storing the trained models.
+"""
+
+STUDIES_DIR: str = f"{OUT_DIR}/studies"
+"""
+The directory for storing the Optuna studies.
+"""

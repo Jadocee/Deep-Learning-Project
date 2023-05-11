@@ -6,7 +6,7 @@ from models.base_model import BaseModel
 
 class LSTMModel(BaseModel):
     def __init__(self, vocab_size: int, embedding_dim: int, output_size: int, hidden_size: int, n_layers: int,
-                 pad_idx: int, bidirectional: bool = True, device: str = "cpu"):
+                 pad_idx: int, dropout: float = 0.0, bidirectional: bool = True, device: str = "cpu"):
         """
         LSTM model for text classification.
         :param vocab_size: The size of the vocabulary.
@@ -23,7 +23,7 @@ class LSTMModel(BaseModel):
         self._modules.extend([
             Embedding(num_embeddings=vocab_size, embedding_dim=embedding_dim, padding_idx=pad_idx).to(self._device),
             LSTM(input_size=embedding_dim, hidden_size=hidden_size, num_layers=n_layers,
-                 bidirectional=bidirectional).to(self._device),
+                 bidirectional=bidirectional, dropout=dropout if n_layers > 1 else 0).to(self._device),
             Linear(in_features=hidden_size * 2 if bidirectional else hidden_size, out_features=output_size).to(
                 self._device)
         ])
