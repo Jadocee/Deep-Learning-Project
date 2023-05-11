@@ -101,11 +101,7 @@ class Main:
     @staticmethod
     def main() -> None:
         Main.switch_menu()
-        # TODO: Implement menu functionality
-        # TODO: Add option to download nltk data (stopwords, etc.)
-        # Temporary solution: uncomment the following line to download missing NLTK stopwords
-        # nltk.download("stopwords")
-        # nltk.download("punkt")
+        # torch.zeros(1).cuda()
 
 
 if __name__ == '__main__':

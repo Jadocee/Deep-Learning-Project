@@ -1,30 +1,29 @@
 from abc import ABC, abstractmethod
 
-from torch.nn import Module, ModuleList
+from torch.nn import ModuleList
 
 
 class BaseModel(ABC):
-    __modules: ModuleList
+    _modules: ModuleList
+    _device: str
 
-    def __init__(self):
+    def __init__(self, device: str = "cpu"):
         super().__init__()
-        self.__modules = ModuleList()
-
-    def _add_modules(self, *modules: Module):
-        self.__modules.extend(modules)
+        self._device = device
+        self._modules = ModuleList().to(device)
 
     @property
     def parameters(self):
-        return self.__modules.parameters()
+        return self._modules.parameters()
 
     def train(self, mode=True):
-        self.__modules.train(mode=mode)
+        self._modules.train(mode=mode)
 
     def eval(self):
-        self.__modules.eval()
+        self._modules.eval()
 
     def predict(self, x):
-        return self.__modules(x)
+        return self._modules(x)
 
     @abstractmethod
     def forward(self, x):

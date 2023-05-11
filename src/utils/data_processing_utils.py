@@ -1,11 +1,12 @@
 import string
-from itertools import chain
-from typing import List, Set
+import warnings
+from collections import Counter
+from typing import List, Set, Iterable, Union
 
-from datasets import Dataset
-from nltk import WordNetLemmatizer, word_tokenize, PorterStemmer
+from nltk import word_tokenize
 from nltk.corpus import stopwords
 from nltk.lm import Vocabulary
+from nltk.stem import WordNetLemmatizer, PorterStemmer
 from torchtext.vocab import build_vocab_from_iterator, Vocab
 
 
@@ -40,9 +41,9 @@ class DataProcessingUtils:
         return tokens[:max_tokens]
 
     @staticmethod
-    def create_vocab(train_data: Dataset, valid_data: Dataset, test_data: Dataset) -> Vocab:
+    def create_vocab(tokens: Iterable) -> Vocab:
         vocab: Vocab = build_vocab_from_iterator(
-            chain(train_data, valid_data, test_data),
+            tokens,
             specials=["<unk>", "<pad>"],
             min_freq=5
         )
@@ -50,11 +51,13 @@ class DataProcessingUtils:
         return vocab
 
     @staticmethod
-    def create_vocab_1(word_tokens: List[str]) -> Vocabulary:
-        vocab: Vocabulary = Vocabulary(counts=word_tokens, unk_cutoff=5)
+    def create_vocab_1(word_tokens: Iterable) -> Vocabulary:
+        warnings.warn("This method is deprecated. Use create_vocab instead.", DeprecationWarning)
+        word_counts = Counter(word_tokens)
+        vocab: Vocabulary = Vocabulary(counts=word_counts, unk_cutoff=5)
         return vocab
 
     @staticmethod
-    def vocabularise_text(tokens: List[str], vocab: Vocabulary) -> List[int]:
+    def vocabularise_text(tokens: List[str], vocab: Union[Vocab, Vocabulary]) -> List[int]:
         ids = [vocab[token] for token in tokens]
         return ids
