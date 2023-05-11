@@ -67,9 +67,6 @@ def prepare_data(batch_size: int, max_tokens: int) \
 
 
 class LSTMClassifierOptimiser(BaseOptimiser):
-    __vocab: Vocab
-    __pad_index: int
-
     def __init__(self, device: str = "cpu"):
         super().__init__(device=device)
 
@@ -78,7 +75,7 @@ class LSTMClassifierOptimiser(BaseOptimiser):
 
         # Suggestions for hyperparameters
 
-        epochs: int = trial.suggest_categorical("epochs", [5, 10])
+        epochs: int = trial.suggest_categorical("epochs", [5, 10, 20])
         n_layers: int = trial.suggest_int("n_layers", 1, 3)
         bidirectional: bool = trial.suggest_categorical("bidirectional", [True, False])
         learning_rate: float = trial.suggest_float("learning_rate", 1e-5, 1e-1, log=True)
@@ -86,13 +83,13 @@ class LSTMClassifierOptimiser(BaseOptimiser):
         hidden_size: int = trial.suggest_categorical("hidden_size", [128, 256, 512])
         max_tokens: int = trial.suggest_categorical("max_tokens", [100, 200, 300, 400, 500, 600])
         embedding_dim: int = trial.suggest_categorical("embedding_dim", [100, 200, 300])
+        optimiser_name: str = trial.suggest_categorical("optimiser", ["Adam", "RMSprop", "SGD", "Adagrad"])
 
         # Load and preprocess the data
         train_dataloader, valid_dataloader, test_dataloader, vocab = prepare_data(batch_size=batch_size,
                                                                                   max_tokens=max_tokens)
 
         # Create the model
-
         model: LSTMModel = LSTMModel(
             vocab_size=len(vocab),
             embedding_dim=embedding_dim,
@@ -120,6 +117,7 @@ class LSTMClassifierOptimiser(BaseOptimiser):
             epochs=epochs,
             batch_size=batch_size,
             max_tokens=max_tokens,
+            optimiser_name=optimiser_name,
             trial=trial
         )
 

@@ -1,12 +1,13 @@
 from typing import List, Tuple, Optional
 
+import torch.optim as optim
 from numpy import mean, float64, ndarray
 from optuna import Trial
 from optuna.exceptions import TrialPruned
 from torch import Tensor, no_grad
 from torch import sum as t_sum
 from torch.nn import CrossEntropyLoss
-from torch.optim import Adam
+from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from torchtext.vocab import Vocab
 
@@ -25,7 +26,7 @@ class LSTMClassifierTrainer(BaseTrainer):
         self.__vocab = vocab
         self.__pad_index = vocab["<pad>"]
 
-    def train(self, model: LSTMModel, dataloader: DataLoader, optimiser: Adam, loss_fn: CrossEntropyLoss) \
+    def train(self, model: LSTMModel, dataloader: DataLoader, optimiser: Optimizer, loss_fn: CrossEntropyLoss) \
             -> Tuple[float64, float64]:
         model.train()
         losses: List[ndarray] = list()
@@ -78,7 +79,10 @@ class LSTMClassifierTrainer(BaseTrainer):
             learning_rate: float = 0.01,
             max_tokens: int = 600,
             trial: Optional[Trial] = None,
+            optimiser_name: str = "adam"
             ) -> float:
+
+        # TODO: Move this method to the base trainer class
 
         # Verify parameters
         if (epochs < 1) or (not isinstance(epochs, int)):
@@ -90,14 +94,16 @@ class LSTMClassifierTrainer(BaseTrainer):
         if (max_tokens < 1) or (not isinstance(max_tokens, int)):
             raise ValueError(f"Invalid max tokens: {max_tokens}")
 
-        # Train the model on the training set and evaluate on the validation set
+        # Set up the optimiser
+        optimiser: Optimizer = getattr(optim, optimiser_name)(model.parameters, lr=learning_rate)
+
         loss_fn: CrossEntropyLoss = CrossEntropyLoss()
-        optimiser: Adam = Adam(params=model.parameters, lr=learning_rate)
         train_losses: List[float] = list()
         train_accuracies: List[float] = list()
         valid_losses: List[float] = list()
         valid_accuracies: List[float] = list()
 
+        # Train the model on the training set and evaluate on the validation set
         for epoch in range(epochs):
             train_loss, train_acc = self.train(model=model, dataloader=self._train_dataloader, optimiser=optimiser,
                                                loss_fn=loss_fn)

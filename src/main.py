@@ -8,6 +8,8 @@ from optimisers.lstm_classifier_optimiser import LSTMClassifierOptimiser
 
 
 class Main:
+    DEVICE: str = "cuda" if has_cuda() else "cpu"
+
     MENUS: Dict[str, Dict[int, str]] = {
         "Main Menu": {
             1: "Image Classifier",
@@ -49,7 +51,6 @@ class Main:
         while True:
             Main.__display_menu(current_menu)
             choice: int = int(input("Enter choice: "))
-            print("\n")
 
             if choice == -1:
                 print("Exiting...")
@@ -84,8 +85,9 @@ class Main:
                     current_menu = "Main Menu"
                 elif choice == 1:
                     system("cls" if name == "nt" else "clear")
-                    optimiser: LSTMClassifierOptimiser = LSTMClassifierOptimiser()
-                    optimiser.run()
+                    study_name: str = input("Enter study name or press enter to use default: ")
+                    optimiser: LSTMClassifierOptimiser = LSTMClassifierOptimiser(device=Main.DEVICE)
+                    optimiser.run(study_name=study_name if study_name != "" else None)
                 else:
                     print("Invalid choice. Try again.")
                     system("cls" if name == "nt" else "clear")
