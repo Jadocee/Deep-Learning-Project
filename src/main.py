@@ -6,8 +6,8 @@ from nltk.downloader import download
 from torch.cuda import is_available as has_cuda
 
 from optimisers.lstm_classifier_optimiser import LSTMClassifierOptimiser
-from utils.definitions import STUDIES_DIR, MODELS_DIR
 from trainers.bow_classifier_trainer import BOWClassifierTrainer
+from utils.definitions import MODELS_DIR, STUDIES_DIR
 
 
 class Main:
@@ -73,7 +73,6 @@ class Main:
                     download("punkt")
                     download("wordnet")
                 elif choice == 4:
-                    print(f"CUDA is {'available' if has_cuda() else 'not available'}")
                     input("Press any key to continue...")
                     system("cls" if name == "nt" else "clear")
                 else:

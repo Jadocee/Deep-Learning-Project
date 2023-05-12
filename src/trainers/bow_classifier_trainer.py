@@ -15,7 +15,6 @@ import numpy as np
 from models.lstm_model import LSTMModel
 from utils.data_processing_utils import DataProcessingUtils
 from utils.dataset_loader import DatasetLoader
-from utils.definitions import TWEET_TOPIC_SINGLE, TWEET_TOPIC_SINGLE_TRAIN_SPLIT, TWEET_TOPIC_SINGLE_TEST_SPLIT
 
 
 class BOWClassifierTrainer:
@@ -67,12 +66,7 @@ class BOWClassifierTrainer:
 
     def run(self, epochs: int = 5, batch_size: int = 128, learning_rate: float = 0.01,
             max_tokens: int = 600) -> None:
-        train_data, valid_data, test_data = DatasetLoader.get_dataset(
-            dataset_name=TWEET_TOPIC_SINGLE,
-            train_split=TWEET_TOPIC_SINGLE_TRAIN_SPLIT,
-            test_split=TWEET_TOPIC_SINGLE_TEST_SPLIT
-        )
-
+        train_data, valid_data, test_data = DatasetLoader.get_tweet_topic_single_dataset()
         # Standardise the data
         train_data = train_data.map(
             lambda x: {"tokens": DataProcessingUtils.standardise_text(text=x["text"], max_tokens=max_tokens)})

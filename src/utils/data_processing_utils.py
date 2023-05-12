@@ -2,18 +2,17 @@ import string
 import warnings
 from collections import Counter
 from typing import List, Set, Iterable, Union
+from datasets import Dataset
 
-import numpy as np
 from nltk import word_tokenize
 from nltk.corpus import stopwords
 from nltk.lm import Vocabulary
-import torchtext
 from nltk.stem import WordNetLemmatizer, PorterStemmer
+import numpy as np
 from torchtext.vocab import build_vocab_from_iterator, Vocab
 
 
 class DataProcessingUtils:
-    
     STOP_WORDS: Set[str] = set(stopwords.words("english"))
     """
     A set of stop words from the nltk library.
@@ -25,13 +24,15 @@ class DataProcessingUtils:
         text = text.lower()
 
         # Remove punctuation
-        text = "".join([char for char in text if char not in string.punctuation])
+        text = "".join(
+            [char for char in text if char not in string.punctuation])
 
         # Tokenise
         tokens: List[str] = word_tokenize(text=text, language="english")
 
         # Remove stop words
-        tokens = [token for token in tokens if token not in DataProcessingUtils.STOP_WORDS]
+        tokens = [
+            token for token in tokens if token not in DataProcessingUtils.STOP_WORDS]
 
         # Finalise
         if lemmatise and stem:
@@ -55,16 +56,17 @@ class DataProcessingUtils:
 
     @staticmethod
     def create_vocab_1(word_tokens: Iterable) -> Vocabulary:
-        warnings.warn("This method is deprecated. Use create_vocab instead.", DeprecationWarning)
+        warnings.warn(
+            "This method is deprecated. Use create_vocab instead.", DeprecationWarning)
         word_counts = Counter(word_tokens)
         vocab: Vocabulary = Vocabulary(counts=word_counts, unk_cutoff=5)
         return vocab
-    
+
     @staticmethod
     def vocabularise_text(tokens: List[str], vocab: Union[Vocab, Vocabulary]) -> List[int]:
         ids = [vocab[token] for token in tokens]
         return ids
-
+    
     @staticmethod
     def numericalize_data(example, vocab):
         ids = [vocab[token] for token in example['tokens']]
@@ -78,7 +80,7 @@ class DataProcessingUtils:
     @staticmethod
     def create_vocab_2(train_data:Dataset, valid_Data:Dataset, test_data: Dataset) -> Vocab:
         vocab = build_vocab_from_iterator(train_data['tokens'],
-                    1                                min_freq=5,
+                                                    min_freq=5,
                                                     specials=['<unk>', '<pad>'])
         vocab.set_default_index(vocab['<unk>'])
         return vocab
