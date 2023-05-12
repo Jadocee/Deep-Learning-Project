@@ -6,7 +6,7 @@ from models.base_model import BaseModel
 
 class LSTMModel(BaseModel):
     def __init__(self, vocab_size: int, embedding_dim: int, output_size: int, hidden_size: int, n_layers: int,
-                 pad_idx: int, bidirectional: bool = True):
+                 pad_idx: int, dropout: float = 0.0, bidirectional: bool = True, device: str = "cpu"):
         """
         LSTM model for text classification.
         :param vocab_size: The size of the vocabulary.
@@ -19,12 +19,14 @@ class LSTMModel(BaseModel):
         :param bidirectional: Whether to use a bidirectional LSTM. If a bidirectional LSTM is used, the output size of
         the LSTM layer is doubled, thus, the input size of the Linear layer is also doubled.
         """
-        super().__init__()
-        self._add_modules(
-            Embedding(num_embeddings=vocab_size, embedding_dim=embedding_dim, padding_idx=pad_idx),
-            LSTM(input_size=embedding_dim, hidden_size=hidden_size, num_layers=n_layers, bidirectional=bidirectional),
-            Linear(in_features=hidden_size * 2 if bidirectional else hidden_size, out_features=output_size)
-        )
+        super().__init__(device=device)
+        self._modules.extend([
+            Embedding(num_embeddings=vocab_size, embedding_dim=embedding_dim, padding_idx=pad_idx).to(self._device),
+            LSTM(input_size=embedding_dim, hidden_size=hidden_size, num_layers=n_layers,
+                 bidirectional=bidirectional, dropout=dropout if n_layers > 1 else 0).to(self._device),
+            Linear(in_features=hidden_size * 2 if bidirectional else hidden_size, out_features=output_size).to(
+                self._device)
+        ])
 
     def forward(self, x: Tensor) -> Tensor:
         """
@@ -32,8 +34,8 @@ class LSTMModel(BaseModel):
         :param x: The input tensor, of shape (batch_size, max_tokens).
         :return: The output tensor, of shape (batch_size, output_size).
         """
-        x = self.__modules[0](x)
-        x, _ = self.__modules[1](x)
+        x = self._modules[0](x)
+        x, _ = self._modules[1](x)
         x = amax(x, dim=1)
-        x = self.__modules[2](x)
+        x = self._modules[2](x)
         return x
