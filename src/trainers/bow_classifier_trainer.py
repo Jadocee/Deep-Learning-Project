@@ -3,12 +3,15 @@ from typing import List, Tuple
 from datasets import Dataset
 from nltk.lm import Vocabulary
 from numpy import mean, ndarray
+from sklearn.model_selection import train_test_split
 from torch import Tensor, no_grad
 from torch import sum as t_sum
+import torch
 from torch.nn import CrossEntropyLoss
 from torch.optim import Adam
 from torch.utils.data import DataLoader
-
+from models.bow_model import BOWModel
+import numpy as np
 from models.lstm_model import LSTMModel
 from utils.data_processing_utils import DataProcessingUtils
 from utils.dataset_loader import DatasetLoader
@@ -21,24 +24,48 @@ class BOWClassifierTrainer:
     def __init__(self, device: str = "cpu") -> None:
         self.__device = device
 
-
-    def evaluate(self, model: LSTMModel, dataloader: DataLoader, loss_fn: CrossEntropyLoss, device: str) \
-            -> Tuple[float, float]:
+    def evaluate(model, dataloader, loss_fn, device):
         model.eval()
-        losses: List[float] = list()
-        accuracies: List[float] = list()
-        with no_grad():
+        losses, accuracies = [], []
+        with torch.no_grad():
             for batch in dataloader:
-                x: Tensor = batch["ids"].to(device)
-                y: Tensor = batch["label"].to(device)
-                y_pred: Tensor = model.forward(x)
-                loss: Tensor = loss_fn(y_pred, y)
+                inputs = batch['multi_hot'].to(device)
+                labels = batch['label'].to(device)
+                # Forward pass
+                preds = model(inputs)
+                print(len(preds))
+                # Calculate loss
+                loss = loss_fn(preds, labels)
+                # Log
                 losses.append(loss.detach().cpu().numpy())
-                accuracy: Tensor = t_sum((y_pred.argmax(dim=1) == y)) / y.shape[0]
-                accuracies.append(accuracy.detach().cpu().numpy())
-        return mean(losses), mean(accuracies)
+            accuracy = torch.sum(torch.argmax(preds, dim=-1) == labels) / labels.shape[0]
+            accuracies.append(accuracy.detach().cpu().numpy())
+        return np.mean(losses), np.mean(accuracies)
+    
+    def train(model, dataloader, loss_fn, optimizer, device):
+        model.train()
+        losses, accuracies = [], []
+        for batch in dataloader:
+            inputs = batch['multi_hot'].to(device)
+            labels = batch['label'].to(device)
+            # Reset the gradients for all variables
+            optimizer.zero_grad()
+            # Forward pass
+            preds = model(inputs)
+            # Calculate loss
+            loss = loss_fn(preds, labels)
+            # Backward pass
+            loss.backward()
+            # Adjust weights
+            optimizer.step()
+            # Log
+            losses.append(loss.detach().cpu().numpy())
+            accuracy = torch.sum(torch.argmax(preds, dim=-1) == labels) / labels.shape[0]
+            accuracies.append(accuracy.detach().cpu().numpy())
+        return np.mean(losses), np.mean(accuracies)
 
-    def run(self, model: LSTMModel, epochs: int = 5, batch_size: int = 128, learning_rate: float = 0.01,
+
+    def run(self, epochs: int = 5, batch_size: int = 128, learning_rate: float = 0.01,
             max_tokens: int = 600) -> None:
         train_data, valid_data, test_data = DatasetLoader.get_dataset(
             dataset_name=TWEET_TOPIC_SINGLE,
@@ -55,7 +82,7 @@ class BOWClassifierTrainer:
             lambda x: {"tokens": DataProcessingUtils.standardise_text(text=x["text"], max_tokens=max_tokens)})
 
         # # Create the vocabulary
-        vocab: Vocabulary = DataProcessingUtils.create_vocab_1(word_tokens=train_data["tokens"])
+        vocab: Vocabulary = DataProcessingUtils.create_vocab_2(train_data,valid_data,test_data)
 
         # Vectorise the data using vocabulary indexing
         # train_data = train_data.map(
@@ -65,44 +92,43 @@ class BOWClassifierTrainer:
         # test_data = test_data.map(
         #     lambda x: {"ids": DataProcessingUtils.vocabularise_text(tokens=x["tokens"], vocab=vocab)})
 
-
-        # NEED TO ADD NUMERICALIZE
+        # Numericalize the data
         train_data = train_data.map(DataProcessingUtils.numericalize_data, fn_kwargs={'vocab': vocab})
         valid_data = valid_data.map(DataProcessingUtils.numericalize_data, fn_kwargs={'vocab': vocab})
         test_data = test_data.map(DataProcessingUtils.numericalize_data, fn_kwargs={'vocab': vocab})
 
+
+        train_data = train_data.map(DataProcessingUtils.multi_hot_data, fn_kwargs={'num_classes': len(vocab)})
+        valid_data = valid_data.map(DataProcessingUtils.multi_hot_data, fn_kwargs={'num_classes': len(vocab)})
+        test_data = test_data.map(DataProcessingUtils.multi_hot_data, fn_kwargs={'num_classes': len(vocab)})
+
         # Convert the data to tensors
-        train_data = train_data.with_format(type="torch", columns=["ids", "label"])
-        valid_data = valid_data.with_format(type="torch", columns=["ids", "label"])
-        test_data = test_data.with_format(type="torch", columns=["ids", "label"])
+        train_data = train_data.with_format(type="torch", columns=["multi_hot", "label"])
+        valid_data = valid_data.with_format(type="torch", columns=["multi_hot", "label"])
+        test_data = test_data.with_format(type="torch", columns=["multi_hot", "label"])
 
         # Create the dataloaders
         train_dataloader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True)
         valid_dataloader = DataLoader(dataset=valid_data, batch_size=batch_size)
         test_dataloader = DataLoader(dataset=test_data, batch_size=batch_size)
 
+        print(len(vocab))
+        model = BOWModel(vocab_size=len(vocab)).to(self.__device)
+
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+        loss_fn = CrossEntropyLoss().to(self.__device)
         # Train the model and evaluate on the validation set
-        loss_fn: CrossEntropyLoss = CrossEntropyLoss()
-        optimizer: Adam = Adam(params=model.parameters(), lr=learning_rate)
-        train_losses: List[float] = list()
-        train_accuracies: List[float] = list()
-        valid_losses: List[float] = list()
-        valid_accuracies: List[float] = list()
-        for epoch in range(epochs):
-            train_loss, train_acc = self.train(model=model, dataloader=train_dataloader, optimizer=optimizer,
-                                               loss_fn=loss_fn, device=self.__device)
-            valid_loss, valid_acc = self.evaluate(model=model, dataloader=valid_dataloader, loss_fn=loss_fn,
-                                                  device=self.__device)
+        train_losses, train_accuracies = [], []
+        valid_losses, valid_accuracies = [], []
+        for epoch in range(10):
+            # Train
+            train_loss, train_accuracy = BOWClassifierTrainer.train(model, train_dataloader, loss_fn, optimizer, self.__device)
+            # Evaluate
+            valid_loss, valid_accuracy = BOWClassifierTrainer.evaluate(model, valid_dataloader, loss_fn, self.__device)
+            # Log
             train_losses.append(train_loss)
-            train_accuracies.append(train_acc)
+            train_accuracies.append(train_accuracy)
             valid_losses.append(valid_loss)
-            valid_accuracies.append(valid_acc)
-            print(f"Epoch: {epoch + 1:02}, Train Loss: {train_loss:.3f}, Train Accuracy: {train_acc * 100:.2f}%, "
-                  f"Valid Loss: {valid_loss:.3f}, Valid Accuracy: {valid_acc * 100:.2f}%")
-
-        # Evaluate the model on the test set
-        test_loss, test_acc = self.evaluate(model=model, dataloader=test_dataloader, loss_fn=loss_fn,
-                                            device=self.__device)
-        print(f"Test Loss: {test_loss:.3f}, Test Accuracy: {test_acc * 100:.2f}%")
-
-        # TODO: Save performance metrics to dictionary
+            valid_accuracies.append(valid_accuracy)
+            print("Epoch {}: train_loss={:.4f}, train_accuracy={:.4f}, valid_loss={:.4f}, valid_accuracy={:.4f}".format(
+                epoch+1, train_loss, train_accuracy, valid_loss, valid_accuracy))

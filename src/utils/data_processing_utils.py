@@ -2,14 +2,17 @@ import string
 from itertools import chain
 from typing import List, Set
 
+import numpy as np
 from datasets import Dataset
 from nltk import WordNetLemmatizer, word_tokenize, PorterStemmer
 from nltk.corpus import stopwords
 from nltk.lm import Vocabulary
+import torchtext
 from torchtext.vocab import build_vocab_from_iterator, Vocab
 
 
 class DataProcessingUtils:
+    
     STOP_WORDS: Set[str] = set(stopwords.words("english"))
     """
     A set of stop words from the nltk library.
@@ -53,7 +56,14 @@ class DataProcessingUtils:
     def create_vocab_1(word_tokens: List[str]) -> Vocabulary:
         vocab: Vocabulary = Vocabulary(counts=word_tokens, unk_cutoff=5)
         return vocab
-
+    
+    @staticmethod
+    def create_vocab_2(train_data:Dataset, valid_Data:Dataset, test_data: Dataset) -> Vocab:
+        vocab = build_vocab_from_iterator(train_data['tokens'],
+                                                    min_freq=5,
+                                                    specials=['<unk>', '<pad>'])
+        vocab.set_default_index(vocab['<unk>'])
+        return vocab
     @staticmethod
     def vocabularise_text(tokens: List[str], vocab: Vocabulary) -> List[int]:
         ids = [vocab[token] for token in tokens]
@@ -64,3 +74,7 @@ class DataProcessingUtils:
         ids = [vocab[token] for token in example['tokens']]
         return {'ids': ids}
 
+    def multi_hot_data(example, num_classes):
+        encoded = np.zeros((num_classes,))
+        encoded[example['ids']] = 1 
+        return {'multi_hot': encoded}

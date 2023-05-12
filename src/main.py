@@ -5,6 +5,7 @@ from nltk import download
 from torch.cuda import is_available as has_cuda
 
 from optimisers.lstm_classifier_optimiser import LSTMClassifierOptimiser
+from trainers.bow_classifier_trainer import BOWClassifierTrainer
 
 
 class Main:
@@ -20,10 +21,14 @@ class Main:
         },
         "Tweet Classifier Menu": {
             1: "LSTM Trainer",
+            2: "BOW Trainer"
         },
         "LSTM Trainer Menu": {
             1: "Optimise Hyperparameters",
         },
+        "BOW Trainer Menu":{
+            1: "Run Bag Of Words 1"
+        }
     }
 
     def __init__(self) -> None:
@@ -76,6 +81,8 @@ class Main:
                     current_menu = "Main Menu"
                 elif choice == 1:
                     current_menu = "LSTM Trainer Menu"
+                elif choice == 2:
+                    current_menu = "BOW Trainer Menu"
                 else:
                     print("Invalid choice. Try again.")
                     system("cls" if name == "nt" else "clear")
@@ -89,6 +96,13 @@ class Main:
                 else:
                     print("Invalid choice. Try again.")
                     system("cls" if name == "nt" else "clear")
+            elif current_menu == "BOW Trainer Menu":
+                if choice == 0:
+                        current_menu = "Main Menu"
+                elif choice == 1:
+                    print({"BagOfWords"})
+                    classifier: BOWClassifierTrainer = BOWClassifierTrainer()
+                    classifier.run()
             elif current_menu == "Image Classifier Menu":
                 if choice == 0:
                     current_menu = "Main Menu"
