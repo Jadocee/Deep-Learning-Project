@@ -77,7 +77,7 @@ class BOWClassifierTrainer(BaseTrainer):
 
 
     def run(self,
-            model: LSTMModel,
+            model: BOWModel,
             epochs: int = 5,
             batch_size: int = 128,
             learning_rate: float = 0.01,
