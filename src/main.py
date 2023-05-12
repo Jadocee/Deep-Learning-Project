@@ -4,6 +4,7 @@ from typing import Dict
 
 from nltk.downloader import download
 from torch.cuda import is_available as has_cuda
+from optimisers.bow_classifier_optimiser import BOWClassifierOptimiser
 
 from optimisers.lstm_classifier_optimiser import LSTMClassifierOptimiser
 from trainers.bow_classifier_trainer import BOWClassifierTrainer
@@ -104,8 +105,8 @@ class Main:
                         current_menu = "Main Menu"
                 elif choice == 1:
                     print({"BagOfWords"})
-                    classifier: BOWClassifierTrainer = BOWClassifierTrainer()
-                    classifier.run()
+                    optimiser: BOWClassifierOptimiser = BOWClassifierOptimiser(device=Main.DEVICE)
+                    optimiser.run(None, prune=True)
             elif current_menu == "Image Classifier Menu":
                 if choice == 0:
                     current_menu = "Main Menu"

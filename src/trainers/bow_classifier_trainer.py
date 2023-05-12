@@ -1,8 +1,9 @@
-from typing import List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from datasets import Dataset
 from nltk.lm import Vocabulary
 from numpy import mean, ndarray
+from optuna import Trial
 from sklearn.model_selection import train_test_split
 from torch import Tensor, no_grad
 from torch import sum as t_sum
@@ -13,23 +14,34 @@ from torch.utils.data import DataLoader
 from models.bow_model import BOWModel
 import numpy as np
 from models.lstm_model import LSTMModel
+from trainers.base_trainer import BaseTrainer
 from utils.data_processing_utils import DataProcessingUtils
 from utils.dataset_loader import DatasetLoader
+from torchtext.vocab import Vocab
 
 
-class BOWClassifierTrainer:
-    __device: str
+class BOWClassifierTrainer(BaseTrainer):
 
-    def __init__(self, device: str = "cpu") -> None:
-        self.__device = device
 
-    def evaluate(model, dataloader, loss_fn, device):
+    def save(self):
+        raise NotImplementedError
+
+    def load(self):
+        raise NotImplementedError
+    
+    def __init__(self, train_dataloader: DataLoader, valid_dataloader: DataLoader, test_dataloader: DataLoader, vocab: Vocab, device: str = "cpu") -> None:
+        super().__init__(device=device, train_dataloader=train_dataloader, valid_dataloader=valid_dataloader,
+                            test_dataloader=test_dataloader)
+        self.__vocab = vocab
+        self.__pad_index = vocab["<pad>"]
+        
+    def evaluate(model, dataloader, loss_fn):
         model.eval()
         losses, accuracies = [], []
         with torch.no_grad():
             for batch in dataloader:
-                inputs = batch['multi_hot'].to(device)
-                labels = batch['label'].to(device)
+                inputs = batch['multi_hot']
+                labels = batch['label']
                 # Forward pass
                 preds = model(inputs)
                 print(len(preds))
@@ -41,12 +53,12 @@ class BOWClassifierTrainer:
             accuracies.append(accuracy.detach().cpu().numpy())
         return np.mean(losses), np.mean(accuracies)
     
-    def train(model, dataloader, loss_fn, optimizer, device):
+    def train(model, dataloader, loss_fn, optimizer):
         model.train()
         losses, accuracies = [], []
         for batch in dataloader:
-            inputs = batch['multi_hot'].to(device)
-            labels = batch['label'].to(device)
+            inputs = batch['multi_hot']
+            labels = batch['label']
             # Reset the gradients for all variables
             optimizer.zero_grad()
             # Forward pass
@@ -64,61 +76,30 @@ class BOWClassifierTrainer:
         return np.mean(losses), np.mean(accuracies)
 
 
-    def run(self, epochs: int = 5, batch_size: int = 128, learning_rate: float = 0.01,
-            max_tokens: int = 600) -> None:
-        train_data, valid_data, test_data = DatasetLoader.get_tweet_topic_single_dataset()
-        # Standardise the data
-        train_data = train_data.map(
-            lambda x: {"tokens": DataProcessingUtils.standardise_text(text=x["text"], max_tokens=max_tokens)})
-        valid_data = valid_data.map(
-            lambda x: {"tokens": DataProcessingUtils.standardise_text(text=x["text"], max_tokens=max_tokens)})
-        test_data = test_data.map(
-            lambda x: {"tokens": DataProcessingUtils.standardise_text(text=x["text"], max_tokens=max_tokens)})
-
-        # # Create the vocabulary
-        vocab: Vocabulary = DataProcessingUtils.create_vocab_2(train_data,valid_data,test_data)
-
-        # Vectorise the data using vocabulary indexing
-        # train_data = train_data.map(
-        #     lambda x: {"ids": DataProcessingUtils.vocabularise_text(tokens=x["tokens"], vocab=vocab)})
-        # valid_data = valid_data.map(
-        #     lambda x: {"ids": DataProcessingUtils.vocabularise_text(tokens=x["tokens"], vocab=vocab)})
-        # test_data = test_data.map(
-        #     lambda x: {"ids": DataProcessingUtils.vocabularise_text(tokens=x["tokens"], vocab=vocab)})
-
-        # Numericalize the data
-        train_data = train_data.map(DataProcessingUtils.numericalize_data, fn_kwargs={'vocab': vocab})
-        valid_data = valid_data.map(DataProcessingUtils.numericalize_data, fn_kwargs={'vocab': vocab})
-        test_data = test_data.map(DataProcessingUtils.numericalize_data, fn_kwargs={'vocab': vocab})
-
-
-        train_data = train_data.map(DataProcessingUtils.multi_hot_data, fn_kwargs={'num_classes': len(vocab)})
-        valid_data = valid_data.map(DataProcessingUtils.multi_hot_data, fn_kwargs={'num_classes': len(vocab)})
-        test_data = test_data.map(DataProcessingUtils.multi_hot_data, fn_kwargs={'num_classes': len(vocab)})
-
-        # Convert the data to tensors
-        train_data = train_data.with_format(type="torch", columns=["multi_hot", "label"])
-        valid_data = valid_data.with_format(type="torch", columns=["multi_hot", "label"])
-        test_data = test_data.with_format(type="torch", columns=["multi_hot", "label"])
-
-        # Create the dataloaders
-        train_dataloader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True)
-        valid_dataloader = DataLoader(dataset=valid_data, batch_size=batch_size)
-        test_dataloader = DataLoader(dataset=test_data, batch_size=batch_size)
-
-        print(len(vocab))
-        model = BOWModel(vocab_size=len(vocab)).to(self.__device)
+    def run(self,
+            model: LSTMModel,
+            epochs: int = 5,
+            batch_size: int = 128,
+            learning_rate: float = 0.01,
+            max_tokens: int = 600,
+            trial: Optional[Trial] = None,
+            optimiser_name: str = "Adam",
+            lr_scheduler_name: Optional[str] = None,
+            # lr_decay: Optional[float] = None,
+            kwargs: Optional[Dict] = None
+            ) -> float:
+      
 
         optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-        loss_fn = CrossEntropyLoss().to(self.__device)
+        loss_fn = CrossEntropyLoss()
         # Train the model and evaluate on the validation set
         train_losses, train_accuracies = [], []
         valid_losses, valid_accuracies = [], []
         for epoch in range(10):
             # Train
-            train_loss, train_accuracy = BOWClassifierTrainer.train(model, train_dataloader, loss_fn, optimizer, self.__device)
+            train_loss, train_accuracy = BOWClassifierTrainer.train(model, self._train_dataloader, loss_fn, optimizer)
             # Evaluate
-            valid_loss, valid_accuracy = BOWClassifierTrainer.evaluate(model, valid_dataloader, loss_fn, self.__device)
+            valid_loss, valid_accuracy = BOWClassifierTrainer.evaluate(model, self._valid_dataloader, loss_fn)
             # Log
             train_losses.append(train_loss)
             train_accuracies.append(train_accuracy)
