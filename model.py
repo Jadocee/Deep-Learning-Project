@@ -3,7 +3,7 @@
 # Author: Thomas Bandy
 #
 # This file contains the implementation of the ResNet18 model and the Residual Block module in PyTorch.
-# The ResNet18 model is a 4-layer variant with 18 convolutional layers.
+# The ResNet18 model is a 5-layer variant with 18 convolutional layers.
 #
 # References:
 # - Kaiming He, et al. "Deep Residual Learning for Image Recognition." arXiv:1512.03385
@@ -22,6 +22,7 @@
 
 import torch
 from torch import nn
+# from resblock import Resblock
 
 
 class ResNet18(nn.Module):
@@ -62,27 +63,27 @@ class ResNet18(nn.Module):
         )
 
         self.layer1 = nn.Sequential(
-            resblock(32, 32, downsample=False),
-            resblock(32, 32, downsample=False)
-        )
-
-        self.layer2 = nn.Sequential(
-            resblock(32, 64, downsample=True),
+            resblock(64, 64, downsample=False),
             resblock(64, 64, downsample=False)
         )
 
-        self.layer3 = nn.Sequential(
+        self.layer2 = nn.Sequential(
             resblock(64, 128, downsample=True),
             resblock(128, 128, downsample=False)
         )
 
-        self.layer4 = nn.Sequential(
+        self.layer3 = nn.Sequential(
             resblock(128, 256, downsample=True),
             resblock(256, 256, downsample=False)
         )
 
+        self.layer4 = nn.Sequential(
+            resblock(256, 512, downsample=True),
+            resblock(512, 512, downsample=False)
+        )
+
         self.gap = torch.nn.AdaptiveAvgPool2d(1)
-        self.fc = torch.nn.Linear(256, outputs)
+        self.fc = torch.nn.Linear(512, outputs)
 
     def forward(self, input):
         ''' Performs the forward pass of the ResNet18 model.
@@ -99,13 +100,13 @@ class ResNet18(nn.Module):
         input = self.layer3(input)
         input = self.layer4(input)
         input = self.gap(input)
-        input = torch.flatten(input)
+        input = input.view(input.size(0), -1)
         input = self.fc(input)
 
         return input
 
 
-class resblock(nn.Module):
+class Resblock(nn.Module):
     '''A residual block module for a convolutional neural network.
 
     Args:
@@ -123,7 +124,7 @@ class resblock(nn.Module):
         conv2 (nn.Conv2d): Second convolutional layer.
 
         bn1 (nn.BatchNorm2d): Batch normalization layer after the first convolution.
-        
+
         bn2 (nn.BatchNorm2d): Batch normalization layer after the second convolution.
 
     Methods:
