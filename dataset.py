@@ -10,6 +10,8 @@
 
 import os
 import glob
+
+import pandas as pd
 from torch.utils.data import Dataset
 from PIL import Image
 
@@ -45,6 +47,9 @@ class Dataset(Dataset):
                 os.path.join(data_dir, '*.jpg'))
 
         self.image_paths.sort()
+        labels_path = os.path.join(data_dir, "labels.csv")
+        self.labels = pd.read_csv(labels_path, header=None).to_numpy()[
+            :, 1] if os.path.isfile(labels_path) else None
         self.transform = transform
         self.n = len(self.image_paths)
 
