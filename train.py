@@ -13,31 +13,44 @@
 # Date: May 12, 2023
 
 import matplotlib.pyplot as plt
+import torch
 from torchvision import transforms
 from torch.utils.data import DataLoader
 from dataset import Dataset
+from model import ResNet18, Resblock
+from torch.optim import Adam
+from torch.nn import CrossEntropyLoss
 
 
 class Train():
-    ''' 
-        Class for training setup and data handling.
+    '''
+    Class for handling data loading, data splitting, training, and visualization of the Intel Image Classification dataset.
 
-        Methods:
-            training_split(): Splits the dataset into training, validation, and test sets.
+    Attributes:
+        train_data (Dataset): The training dataset.
 
-            load_data(): Loads the training, validation, and test data into DataLoader objects.
+        valid_data (Dataset): The validation dataset.
 
-            print_checks(): Prints information about the dataset and DataLoader.
+        test_data (Dataset): The test dataset.
 
-            diagram(): Displays a diagram of sample images from the training data.
+        device (str): The device to be used for computations ('cuda' if available, else 'cpu').
     '''
 
     def __init__(self):
+        '''
+        Initializes the Train class and sets the computation device.
+        '''
         self.train_data = None
         self.valid_data = None
         self.test_data = None
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        print('Using {}'.format(self.device))
 
-    def training_split(self):
+    def prepare_data(self):
+        '''
+        Prepares the data by performing transformations, splitting the data into training, validation, and test sets,
+        and loading them into DataLoader objects.
+        '''
         train_transforms = transforms.Compose([
             transforms.RandomResizedCrop(scale=(0.6, 1.0), size=(150, 150)),
             transforms.RandomHorizontalFlip(),
@@ -57,24 +70,86 @@ class Train():
         self.test_data = Dataset(
             "data\intel_image_classification_dataset\seg_test\seg_test", transform=eval_transforms)
 
-    def load_data(self):
-        '''
-            Splits the dataset into training, validation, and test sets and applies transformations to each set.
-        '''
         self.train_loader = DataLoader(
             dataset=self.train_data, batch_size=100, shuffle=True)  # TODO Update to take a set amount of batches vs arbitrary number
         self.valid_loader = DataLoader(
-            dataset=self.valid_data, batch_size=len(self.valid_data), shuffle=False)
+            dataset=self.valid_data, batch_size=100, shuffle=False)
         self.test_loader = DataLoader(
-            dataset=self.test_data, batch_size=len(self.test_data), shuffle=False)
-        return self.train_loader, self.valid_loader, self.test_loader
+            dataset=self.test_data, batch_size=100, shuffle=False)
+        # return self.train_loader, self.valid_loader, self.test_loader
+
+    def begin_training(self, num_epochs):
+        '''
+        Trains a ResNet18 model on the prepared data for a specified number of epochs.
+
+        Args:
+            num_epochs (int): The number of epochs for training the model.
+        '''
+        model = ResNet18(3, Resblock, outputs=1000)
+        model = model.to(self.device)
+        optimizer = Adam(params=model.parameters(), lr=0.001)
+        loss_fn = CrossEntropyLoss()
+        train_losses, val_losses = [], []
+        train_accs, val_accs = [], []
+        # Train for 10 epochs
+        for epoch in range(num_epochs):
+            # Training
+            # Track epoch loss and accuracy
+            epoch_loss, epoch_accuracy = 0, 0
+            # Switch model to training (affects batch norm and dropout)
+            model.train()
+            # Iterate through batches
+            for i, (data, label) in enumerate(self.train_loader):
+                # Reset gradients
+                optimizer.zero_grad()
+                # Move data to the used device
+                data = data.to(self.device)
+                label = label.to(self.device)
+                # Forward pass
+                output = model(data)
+                loss = loss_fn(output, label)
+                # Backward pass
+                loss.backward()
+                # Adjust weights
+                optimizer.step()
+                # Compute metrics
+                acc = ((output.argmax(dim=1) == label).float().mean())
+                epoch_accuracy += acc/len(self.train_loader)
+                epoch_loss += loss/len(self.train_loader)
+            print('Epoch: {}, train accuracy: {:.2f}%, train loss: {:.4f}'.format(
+                epoch+1, epoch_accuracy*100, epoch_loss))
+            train_losses.append(epoch_loss.item())
+            train_accs.append(epoch_accuracy.item())
+            # Evaluation
+            # Track epoch loss and accuracy
+            epoch_valid_accuracy, epoch_valid_loss = 0, 0
+            # Switch model to evaluation (affects batch norm and dropout)
+            model.eval()
+            # Disable gradients
+            with torch.no_grad():
+                # Iterate through batches
+                for data, label in self.valid_loader:
+                    # Move data to the used device
+                    data = data.to(self.device)
+                    label = label.to(self.device)
+                    # Forward pass
+                    valid_output = model(data)
+                    valid_loss = loss_fn(valid_output, label)
+                    # Compute metrics
+                    acc = ((valid_output.argmax(dim=1) == label).float().mean())
+                    epoch_valid_accuracy += acc/len(self.valid_loader)
+                    epoch_valid_loss += valid_loss/len(self.valid_loader)
+            print('Epoch: {}, val accuracy: {:.2f}%, val loss: {:.4f}'.format(
+                epoch+1, epoch_valid_accuracy*100, epoch_valid_loss))
+            val_losses.append(epoch_valid_loss.item())
+            val_accs.append(epoch_valid_accuracy.item())
+
+    #-------------------- Util --------------------#
 
     def print_checks(self):
         '''
-            Loads the training, validation, and test data into DataLoader objects.
-
-            Returns:
-                tuple: Tuple containing the training, validation, and test DataLoader objects.
+        Prints the size of the training, validation, and test datasets,
+        the number of batches in each DataLoader, and the shape of a sample image.
         '''
         # Check our dataset sizes
         print("Train: {} examples".format(len(self.train_data)))
@@ -90,7 +165,7 @@ class Train():
 
     def diagram(self):
         '''
-            Displays a diagram of sample images from the training data.
+        Displays a 4x4 grid of sample images from the training data.
         '''
         fig = plt.figure()
         fig.set_figheight(12)
