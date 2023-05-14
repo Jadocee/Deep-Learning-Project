@@ -14,10 +14,12 @@
 
 import matplotlib.pyplot as plt
 import torch
+from torch import device
+
 from torchvision import transforms
 from torch.utils.data import DataLoader
 from dataset import Dataset
-from model import ResNet18, Resblock
+from model import ResNet18, Resblock , VGGnet
 from torch.optim import Adam
 from torch.nn import CrossEntropyLoss
 
@@ -40,6 +42,7 @@ class Train():
         '''
         Initializes the Train class and sets the computation device.
         '''
+        torch.cuda.empty_cache()
         self.train_data = None
         self.valid_data = None
         self.test_data = None
@@ -79,15 +82,10 @@ class Train():
         # return self.train_loader, self.valid_loader, self.test_loader
 
     def begin_training(self, num_epochs):
-        '''
-        Trains a ResNet18 model on the prepared data for a specified number of epochs.
 
-        Args:
-            num_epochs (int): The number of epochs for training the model.
-        '''
-        model = ResNet18(3, Resblock, outputs=1000)
+        model = VGGnet(3,1000)
         model = model.to(self.device)
-        optimizer = Adam(params=model.parameters(), lr=0.001)
+        optimizer = Adam(model.parameters(), lr=0.001)
         loss_fn = CrossEntropyLoss()
         train_losses, val_losses = [], []
         train_accs, val_accs = [], []
