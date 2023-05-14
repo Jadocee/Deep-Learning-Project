@@ -156,13 +156,13 @@ class VGGnet(nn.Module):
         self.conv_layers = self.make_conv_layers(VGG11)
 
         self.fcs = nn.Sequential(
-        nn.Linear(512*7*7, 4096),
+        nn.Linear(41472, 2048),
             nn.ReLU(),
             nn.Dropout(p=0.5),
-            nn.Linear(4096,4096),
+            nn.Linear(2048,2048),
             nn.ReLU(),
             nn.Dropout(p=0.5),
-            nn.Linear(4096, outputs)
+            nn.Linear(2048, outputs)
         )
 
 
@@ -170,6 +170,7 @@ class VGGnet(nn.Module):
         x = self.conv_layers(x)
         x = x.reshape(x.shape[0], -1)
         x = self.fcs(x)
+        x = x.view(41472,1)
         return x
 
     def make_conv_layers(self, architecture):
