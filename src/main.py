@@ -10,13 +10,22 @@ from utils.definitions import STUDIES_DIR, MODELS_DIR
 
 
 class Main:
+    """
+    Main class which acts as the command-line interface of the application.
+
+    This class is not meant to be instantiated. It provides several static methods for interacting with the application.
+    """
+
     DEVICE: str = "cuda" if has_cuda() else "cpu"
+    """
+    The device to be used for computations. If CUDA is available, it defaults to "cuda", else "cpu".
+    """
 
     MENUS: Dict[str, Dict[int, str]] = {
         "Main Menu": {
             1: "Image Classifier",
             2: "Tweet Classifier",
-            3: f"Download NLTK Data",
+            3: "Download NLTK Data",
             4: "Check CUDA Availability",
         },
         "Image Classifier Menu": {
@@ -29,12 +38,30 @@ class Main:
             1: "Optimise Hyperparameters",
         },
     }
+    """
+    A dictionary containing the structure of the menus to be displayed on the command-line interface.
+    """
 
     def __init__(self) -> None:
+        """
+        The constructor for Main class. Raises an exception since the class should not be instantiated.
+
+        Raises:
+            Exception: If an attempt is made to instantiate the Main class.
+        """
         raise Exception("This class is not meant to be instantiated")
 
     @staticmethod
     def __display_menu(menu_name: str) -> None:
+        """
+        Displays a specified menu on the command-line interface.
+
+        Args:
+            menu_name (str): The name of the menu to be displayed.
+
+        Raises:
+            Exception: If the provided menu_name does not exist in the MENUS dictionary.
+        """
         if menu_name not in Main.MENUS.keys():
             raise Exception(f"Unknown menu: {menu_name}")
 
@@ -48,6 +75,12 @@ class Main:
 
     @staticmethod
     def __switch_menu():
+        """
+        Handles user interaction with the command-line interface.
+
+        The method takes no arguments and returns nothing. It enters into an infinite loop where it displays the menu
+        and waits for the user to enter a choice. The loop breaks only when the user chooses to exit.
+        """
         current_menu = "Main Menu"
 
         while True:
@@ -104,7 +137,12 @@ class Main:
 
     @staticmethod
     def __initial_setup() -> None:
-        # Make sure directories in definitions exist
+        """
+        Performs the initial setup for the application.
+
+        The method checks for the existence of certain directories and creates them if they do not exist.
+        The directories checked are those defined in the definitions file.
+        """
         if not exists(STUDIES_DIR):
             print(f"Creating directory: {STUDIES_DIR}")
             mkdir(STUDIES_DIR)
@@ -114,10 +152,14 @@ class Main:
 
     @staticmethod
     def main() -> None:
+        """
+        The main entry point for the application.
+
+        This method performs the initial setup and then launches the command-line interface.
+        """
         Main.__initial_setup()
         Main.__switch_menu()
-        # torch.zeros(1).cuda()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     Main.main()

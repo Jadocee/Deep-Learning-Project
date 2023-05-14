@@ -17,6 +17,17 @@ from utils.dataset_loader import DatasetLoader
 
 def prepare_data(batch_size: int, max_tokens: int) \
         -> Tuple[DataLoader, DataLoader, DataLoader, Union[Vocab, Vocabulary]]:
+    """
+    Prepare the data for LSTM classifier training.
+
+    Args:
+        batch_size (int): The batch size.
+        max_tokens (int): The maximum number of tokens.
+
+    Returns:
+        Tuple[DataLoader, DataLoader, DataLoader, Union[Vocab, Vocabulary]]: Returns the train, validation, and test
+        dataloaders, and the vocabulary.
+    """
     # TODO: Move to utility class
     # TODO: Make this reusable for other datasets
 
@@ -31,12 +42,14 @@ def prepare_data(batch_size: int, max_tokens: int) \
         lambda x: {"tokens": DataProcessingUtils.standardise_text(text=x["text"], max_tokens=max_tokens)})
 
     # Flatten the data
-    flat_train = [token for tokens in train_data["tokens"] for token in tokens]
-    flat_valid = [token for tokens in valid_data["tokens"] for token in tokens]
-    flat_test = [token for tokens in test_data["tokens"] for token in tokens]
+    # flat_train = [token for tokens in train_data["tokens"] for token in tokens]
+    # flat_valid = [token for tokens in valid_data["tokens"] for token in tokens]
+    # flat_test = [token for tokens in test_data["tokens"] for token in tokens]
 
     # Create the vocabulary
-    vocab: Vocab = DataProcessingUtils.create_vocab(chain(flat_train, flat_valid, flat_test))
+    # vocab: Vocab = DataProcessingUtils.create_vocab(chain(flat_train, flat_valid, flat_test))
+    vocab: Vocab = DataProcessingUtils.create_vocab(
+        chain(train_data["tokens"], valid_data["tokens"], test_data["tokens"]))
 
     def __collate(batch: List[Dict[str, Tensor]]) -> Dict[str, Tensor]:
         batch_ids: Tensor = pad_sequence(([item["ids"] for item in batch]),
@@ -67,20 +80,40 @@ def prepare_data(batch_size: int, max_tokens: int) \
 
 
 class LSTMClassifierOptimiser(BaseOptimiser):
+    """
+    Class for the LSTM classifier optimiser. Inherits from the BaseOptimiser class.
+    """
+
     def __init__(self, device: str = "cpu"):
+        """
+        Initializes the LSTMClassifierOptimiser class.
+
+        Args:
+            device (str, optional): The device to use for computations. Defaults to "cpu".
+        """
         super().__init__(device=device)
 
     def _objective(self, trial: Trial) -> float:
+        """
+        Objective function for the LSTM classifier optimiser. This is where the hyperparameters for the LSTM classifier
+        model are suggested.
+
+        Args:
+            trial (Trial): Optuna's trial object.
+
+        Returns:
+            float: The accuracy of the model on the validation set.
+        """
         # TODO: Set the seed for reproducibility
 
         # Suggestions for hyperparameters
 
-        epochs: int = trial.suggest_categorical("epochs", [5, 10, 20])
-        n_layers: int = trial.suggest_int("n_layers", 1, 3)
+        epochs: int = trial.suggest_categorical("epochs", [3, 5, 10, 20, 50])
+        n_layers: int = trial.suggest_int("n_layers", 1, 5)
         bidirectional: bool = trial.suggest_categorical("bidirectional", [True, False])
         learning_rate: float = trial.suggest_float("learning_rate", 1e-6, 1e-1, log=True)
         batch_size: int = trial.suggest_categorical("batch_size", [8, 32, 64, 128, 256])
-        hidden_size: int = trial.suggest_categorical("hidden_size", [128, 256, 512, 1024])
+        hidden_size: int = trial.suggest_categorical("hidden_size", [128, 256, 512, 1024, 2048])
         max_tokens: int = trial.suggest_categorical("max_tokens", [100, 200, 300, 400, 500, 600])
         embedding_dim: int = trial.suggest_categorical("embedding_dim", [100, 200, 300])
         optimiser_name: str = trial.suggest_categorical("optimiser", ["Adam", "RMSprop", "SGD", "Adagrad"])
