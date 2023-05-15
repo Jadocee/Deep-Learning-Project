@@ -26,73 +26,81 @@ from torch import nn
 
 
 class ResNet18(nn.Module):
+    '''
+    A PyTorch implementation of the ResNet-18 architecture.
 
-    def __init__(self, in_channels, resblock, outputs=1000):
-        '''A 4-layer ResNet model with 18 convolutional layers.
+    This class implements the ResNet-18 architecture, a widely used deep convolutional neural network architecture
+    for image classification tasks. It inherits from the PyTorch nn.Module class.
 
-            Args:
-                in_channels (int): Number of input channels.
-                resblock (class): Residual block class to be used in the network.
-                outputs (int): Number of output classes. Defaults to 1000.
+    Attributes:
+        - layer0 (nn.Sequential): The initial layer of the ResNet-18, consisting of a convolution, max pooling, batch normalization,
+            and ReLU activation.
+        - layer1 (nn.Sequential): The second layer of the ResNet-18, consisting of 2 residual blocks.
 
-            Attributes:
-                layer0 (nn.Sequential): First layer of the network, including initial convolution, pooling, batch normalization, and ReLU activation.
+        - layer2 (nn.Sequential): The third layer of the ResNet-18, consisting of 2 residual blocks.
 
-                layer1 (nn.Sequential): Second layer of the network, consisting of two residual blocks.
+        - layer3 (nn.Sequential): The fourth layer of the ResNet-18, consisting of 2 residual blocks.
 
-                layer2 (nn.Sequential): Third layer of the network, consisting of two residual blocks with downsample in the first block.
+        - layer4 (nn.Sequential): The fifth layer of the ResNet-18, consisting of 2 residual blocks.
+        - gap (torch.nn.AdaptiveAvgPool2d): Global average pooling layer.
+        - fc (torch.nn.Linear): Fully connected layer for the network output.
+    '''
 
-                layer3 (nn.Sequential): Fourth layer of the network, consisting of two residual blocks with downsample in the first block.
+    def __init__(self, in_channels, out_channel, resblock, outputs=1000):
+        '''
+        Constructs all the necessary attributes for the ResNet18 object.
 
-                layer4 (nn.Sequential): Fifth layer of the network, consisting of two residual blocks with downsample in the first block.
+        Args:
+            in_channels (int): Number of input channels.
 
-                gap (nn.AdaptiveAvgPool2d): Global average pooling layer.
+            out_channel (int): Number of output channels for the initial convolutional layer.
 
-                fc (nn.Linear): Fully connected layer for classification.
+            resblock (nn.Module): The type of Residual Block to use. Must be a subclass of nn.Module.
 
-            Methods:
-                forward(input): Performs the forward pass of the ResNet18 model.
+            outputs (int, optional): Number of output units for the last linear layer. Defaults to 1000.
         '''
 
         super().__init__()
         self.layer0 = nn.Sequential(
-            nn.Conv2d(in_channels, 64, kernel_size=7, stride=2, padding=3),
+            nn.Conv2d(in_channels, out_channel,
+                      kernel_size=7, stride=2, padding=3),
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
-            nn.BatchNorm2d(64),
+            nn.BatchNorm2d(out_channel),
             nn.ReLU()
         )
 
         self.layer1 = nn.Sequential(
-            resblock(64, 64, downsample=False),
-            resblock(64, 64, downsample=False)
+            resblock(out_channel, out_channel, downsample=False),
+            resblock(out_channel, out_channel, downsample=False)
         )
 
         self.layer2 = nn.Sequential(
-            resblock(64, 128, downsample=True),
-            resblock(128, 128, downsample=False)
+            resblock(out_channel, (out_channel*2), downsample=True),
+            resblock((out_channel*2), (out_channel*2), downsample=False)
         )
 
         self.layer3 = nn.Sequential(
-            resblock(128, 256, downsample=True),
-            resblock(256, 256, downsample=False)
+            resblock((out_channel*2), (out_channel*4), downsample=True),
+            resblock((out_channel*4), (out_channel*4), downsample=False)
         )
 
         self.layer4 = nn.Sequential(
-            resblock(256, 512, downsample=True),
-            resblock(512, 512, downsample=False)
+            resblock((out_channel*4), (out_channel*8), downsample=True),
+            resblock((out_channel*8), (out_channel*8), downsample=False)
         )
 
         self.gap = torch.nn.AdaptiveAvgPool2d(1)
-        self.fc = torch.nn.Linear(512, outputs)
+        self.fc = torch.nn.Linear((out_channel*8), outputs)
 
     def forward(self, input):
-        ''' Performs the forward pass of the ResNet18 model.
+        '''
+        Performs the forward pass of the ResNet18 model.
 
-            Args:
-                input (torch.Tensor): Input tensor.
+        Args:
+            input (torch.Tensor): Input tensor.
 
-            Returns:
-                torch.Tensor: Output tensor after applying the forward pass.
+        Returns:
+            torch.Tensor: Output tensor after applying the forward pass.
         '''
         input = self.layer0(input)
         input = self.layer1(input)
