@@ -12,7 +12,6 @@
 #
 # Date: May 12, 2023
 
-import matplotlib.pyplot as plt
 import torch
 from torchvision import transforms
 from torch.utils.data import DataLoader
@@ -78,19 +77,19 @@ class Train():
             dataset=self.test_data, batch_size=100, shuffle=False)
         # return self.train_loader, self.valid_loader, self.test_loader
 
-    def begin_training(self, num_epochs):
+    def begin_training(self, width, num_epochs, learning_rate):
         '''
         Trains a ResNet18 model on the prepared data for a specified number of epochs.
 
         Args:
             num_epochs (int): The number of epochs for training the model.
         '''
-        model = ResNet18(3, Resblock, outputs=1000)
+        model = ResNet18(3, width, Resblock, outputs=1000)
         model = model.to(self.device)
-        optimizer = Adam(params=model.parameters(), lr=0.001)
+        optimizer = Adam(params=model.parameters(), lr=learning_rate)
         loss_fn = CrossEntropyLoss()
-        train_losses, val_losses = [], []
-        train_accs, val_accs = [], []
+        self.train_losses, self.val_losses = [], []
+        self.train_accs, self.val_accs = [], []
         # Train for 10 epochs
         for epoch in range(num_epochs):
             # Training
@@ -118,8 +117,8 @@ class Train():
                 epoch_loss += loss/len(self.train_loader)
             print('Epoch: {}, train accuracy: {:.2f}%, train loss: {:.4f}'.format(
                 epoch+1, epoch_accuracy*100, epoch_loss))
-            train_losses.append(epoch_loss.item())
-            train_accs.append(epoch_accuracy.item())
+            self.train_losses.append(epoch_loss.item())
+            self.train_accs.append(epoch_accuracy.item())
             # Evaluation
             # Track epoch loss and accuracy
             epoch_valid_accuracy, epoch_valid_loss = 0, 0
@@ -141,50 +140,23 @@ class Train():
                     epoch_valid_loss += valid_loss/len(self.valid_loader)
             print('Epoch: {}, val accuracy: {:.2f}%, val loss: {:.4f}'.format(
                 epoch+1, epoch_valid_accuracy*100, epoch_valid_loss))
-            val_losses.append(epoch_valid_loss.item())
-            val_accs.append(epoch_valid_accuracy.item())
+            self.val_losses.append(epoch_valid_loss.item())
+            self.val_accs.append(epoch_valid_accuracy.item())
 
-    #-------------------- Util --------------------#
+            test_accuracy, test_loss = 0, 0
+            with torch.no_grad():
+                # Iterate through batches
+                for data, label in self.test_loader:
+                    # Move data to the used device
+                    data = data.to(self.device)
+                    label = label.to(self.device)
+                    # Forward pass
+                    test_output_i = model(data)
+                    test_loss_i = loss_fn(test_output_i, label)
+                    # Compute metrics
+                    acc = ((test_output_i.argmax(dim=1) == label).float().mean())
+                    test_accuracy += acc/len(self.test_loader)
+                    test_loss += test_loss_i/len(self.test_loader)
 
-    def print_checks(self):
-        '''
-        Prints the size of the training, validation, and test datasets,
-        the number of batches in each DataLoader, and the shape of a sample image.
-        '''
-        # Check our dataset sizes
-        print("Train: {} examples".format(len(self.train_data)))
-        print("Valid: {} examples".format(len(self.valid_data)))
-        print("Test: {} examples".format(len(self.test_data)))
-
-        # Check number of batches
-        print("Train: {} batches".format(len(self.train_loader)))
-        print("Valid: {} batches".format(len(self.valid_loader)))  # Should be 1
-        print("Test: {} batches".format(len(self.test_loader)))  # Should be 1
-
-        print(self.valid_data[0][0].shape)
-
-    def diagram(self):
-        '''
-        Displays a 4x4 grid of sample images from the training data.
-        '''
-        fig = plt.figure()
-        fig.set_figheight(12)
-        fig.set_figwidth(12)
-        for idx in range(16):
-            ax = fig.add_subplot(4, 4, idx+1)
-            ax.axis('off')
-            if self.train_data[idx][1] == 0:
-                ax.set_title("buildings")
-            elif self.train_data[idx][1] == 1:
-                ax.set_title("forest")
-            elif self.train_data[idx][1] == 2:
-                ax.set_title("glacier")
-            elif self.train_data[idx][1] == 3:
-                ax.set_title("mountain")
-            elif self.train_data[idx][1] == 4:
-                ax.set_title("sea")
-            elif self.train_data[idx][1] == 5:
-                ax.set_title("street")
-            plt.imshow(self.train_data[idx][0].permute(1, 2, 0))
-        plt.axis('off')
-        plt.show()
+        print("Final Test loss: {:.4f}".format(test_loss))
+        print("Final Test accuracy: {:.2f}%".format(test_accuracy*100))
