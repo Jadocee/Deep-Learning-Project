@@ -83,9 +83,9 @@ class Train():
 
     def begin_training(self, num_epochs):
 
-        model = VGGnet(3,1000)
+        model = VGGnet()
         model = model.to(self.device)
-        optimizer = Adam(model.parameters(), lr=0.001)
+        optimizer = Adam(model.parameters(), lr=0.01)
         loss_fn = CrossEntropyLoss()
         train_losses, val_losses = [], []
         train_accs, val_accs = [], []

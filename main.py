@@ -8,5 +8,7 @@ test = Train()
 
 test.prepare_data()
 test.print_checks()
-# test.diagram()
-test.begin_training(10)
+
+test.begin_training(5)
+
+test.diagram()

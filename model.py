@@ -148,50 +148,108 @@ class Resblock(nn.Module):
 
 
 
-VGG11 = [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M' ]
+VGG16 = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M' ]
 class VGGnet(nn.Module):
-    def __init__(self, in_channels, outputs=1000):
+    # def __init__(self, in_channels, outputs=10):
+    #     super(VGGnet, self).__init__()
+    #     self.in_channels = in_channels
+    #     self.conv_layers = self.make_conv_layers(VGG16)
+    #
+    #     self.fcs = nn.Sequential(
+    #         nn.Linear(32 * 37 * 37, 128),
+    #         nn.ReLU(),
+    #         nn.Dropout(p=0.5),
+    #         nn.Linear(128,128),
+    #         nn.ReLU(),
+    #         nn.Dropout(p=0.5),
+    #         nn.Linear(128, outputs)
+    #     )
+    #
+    #
+    # def forward(self, x):
+    #     x = self.conv_layers(x)
+    #     x = x.reshape(x.shape[0], -1)
+    #     #x = x.view(1, 32 * 37 * 27)
+    #     x = self.fcs(x)
+    #
+    #     return x
+    #
+    # def make_conv_layers(self, architecture):
+    #     layers = []
+    #     in_channels = self.in_channels
+    #
+    #     for x in architecture:
+    #         if type(x) == int:
+    #             out_channels = x
+    #
+    #             layers += [nn.Conv2d(in_channels=in_channels,out_channels=out_channels,
+    #                                  kernel_size=3, stride=1, padding=1),
+    #                        nn.BatchNorm2d(x),
+    #                        nn.ReLU()]
+    #
+    #             in_channels = x
+    #         elif x == 'M':
+    #             layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
+    #
+    #     return nn.Sequential(*layers)
+    def __init__(self, num_classes=1000):
         super(VGGnet, self).__init__()
-        self.in_channels = in_channels
-        self.conv_layers = self.make_conv_layers(VGG11)
 
-        self.fcs = nn.Sequential(
-        nn.Linear(41472, 2048),
+        self.features = nn.Sequential(
+            nn.Conv2d(3, 64, kernel_size=3, padding=1),
             nn.ReLU(),
-            nn.Dropout(p=0.5),
-            nn.Linear(2048,2048),
+            nn.Conv2d(64, 64, kernel_size=3, padding=1),
             nn.ReLU(),
-            nn.Dropout(p=0.5),
-            nn.Linear(2048, outputs)
+            nn.MaxPool2d(kernel_size=2, stride=2),
+
+            nn.Conv2d(64, 128, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(128, 128, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+
+            nn.Conv2d(128, 256, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(256, 256, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(256, 256, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+
+            nn.Conv2d(256, 512, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(512, 512, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(512, 512, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+
+            nn.Conv2d(512, 512, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(512, 512, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(512, 512, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
         )
 
+        self.avgpool = nn.AdaptiveAvgPool2d((7, 7))
+        self.classifier = nn.Sequential(
+            nn.Linear(512 * 7 * 7, 4096),
+            nn.ReLU(),
+            nn.Dropout(p=0.5),
+            nn.Linear(4096, 4096),
+            nn.ReLU(),
+            nn.Dropout(p=0.5),
+            nn.Linear(4096, num_classes),
+        )
 
     def forward(self, x):
-        x = self.conv_layers(x)
-        x = x.reshape(x.shape[0], -1)
-        x = self.fcs(x)
-        x = x.view(41472,1)
+        x = self.features(x)
+        x = self.avgpool(x)
+        x = x.view(x.size(0), -1)
+        x = self.classifier(x)
         return x
-
-    def make_conv_layers(self, architecture):
-        layers = []
-        in_channels = self.in_channels
-
-        for x in architecture:
-            if type(x) == int:
-                out_channels = x
-
-                layers += [nn.Conv2d(in_channels=in_channels,out_channels=out_channels,
-                                     kernel_size=(3,3), stride=(1,1), padding=(1,1)),
-                           nn.BatchNorm2d(x),
-                           nn.ReLU()]
-
-                in_channels = x
-            elif x == 'M':
-                layers += [nn.MaxPool2d(kernel_size=(2,2), stride=(2,2))]
-
-        return nn.Sequential(*layers)
-
 
 
 
