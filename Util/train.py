@@ -15,8 +15,8 @@
 import torch
 from torchvision import transforms
 from torch.utils.data import DataLoader
-from dataset import Dataset
-from model import ResNet18, Resblock
+from Util.dataset import Dataset
+from Models.resnet_model import ResNet18, Resblock
 from torch.optim import Adam
 from torch.nn import CrossEntropyLoss
 

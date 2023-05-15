@@ -1,8 +1,8 @@
 # Packaged with - dataset.py, resnet.py, train.py
 # Author - Thomas Bandy (c3374048)
 
-from train import Train
-import util
+from Util.train import Train
+from Util import util
 
 learn_rates = [0.0001, 0.001, 0.01]
 epochs = [5, 10, 50]
