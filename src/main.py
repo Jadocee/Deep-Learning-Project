@@ -4,9 +4,11 @@ from typing import Dict
 
 from nltk.downloader import download
 from torch.cuda import is_available as has_cuda
+from optimisers.bow_classifier_optimiser import BOWClassifierOptimiser
 
 from optimisers.lstm_classifier_optimiser import LSTMClassifierOptimiser
-from utils.definitions import STUDIES_DIR, MODELS_DIR
+from trainers.bow_classifier_trainer import BOWClassifierTrainer
+from utils.definitions import MODELS_DIR, STUDIES_DIR
 
 
 class Main:
@@ -33,10 +35,14 @@ class Main:
         },
         "Tweet Classifier Menu": {
             1: "LSTM Trainer",
+            2: "BOW Trainer"
         },
         "LSTM Trainer Menu": {
             1: "Optimise Hyperparameters",
         },
+        "BOW Trainer Menu":{
+            1: "Run Bag Of Words 1"
+        }
     }
     """
     A dictionary containing the structure of the menus to be displayed on the command-line interface.
@@ -101,7 +107,6 @@ class Main:
                     download("punkt")
                     download("wordnet")
                 elif choice == 4:
-                    print(f"CUDA is {'available' if has_cuda() else 'not available'}")
                     input("Press any key to continue...")
                     system("cls" if name == "nt" else "clear")
                 else:
@@ -112,6 +117,8 @@ class Main:
                     current_menu = "Main Menu"
                 elif choice == 1:
                     current_menu = "LSTM Trainer Menu"
+                elif choice == 2:
+                    current_menu = "BOW Trainer Menu"
                 else:
                     print("Invalid choice. Try again.")
                     system("cls" if name == "nt" else "clear")
@@ -126,6 +133,13 @@ class Main:
                 else:
                     print("Invalid choice. Try again.")
                     system("cls" if name == "nt" else "clear")
+            elif current_menu == "BOW Trainer Menu":
+                if choice == 0:
+                        current_menu = "Main Menu"
+                elif choice == 1:
+                    print({"BagOfWords"})
+                    optimiser: BOWClassifierOptimiser = BOWClassifierOptimiser(device=Main.DEVICE)
+                    optimiser.run(None, prune=True)
             elif current_menu == "Image Classifier Menu":
                 if choice == 0:
                     current_menu = "Main Menu"
