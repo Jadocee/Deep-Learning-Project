@@ -85,7 +85,6 @@ class BOWClassifierTrainer(BaseTrainer):
             trial: Optional[Trial] = None,
             optimiser_name: str = "Adam",
             lr_scheduler_name: Optional[str] = None,
-            # lr_decay: Optional[float] = None,
             kwargs: Optional[Dict] = None
             ) -> float:
       
