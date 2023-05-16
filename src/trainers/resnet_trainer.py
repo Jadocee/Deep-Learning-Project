@@ -1,4 +1,4 @@
-# File: train.py
+# File: resnet_trainer.py
 #
 # Author: Thomas Bandy
 #
@@ -13,16 +13,16 @@
 # Date: May 12, 2023
 
 import torch
-from torchvision import transforms
-from torch.utils.data import DataLoader
-from Util.dataset import Dataset
 from Models.resnet_model import ResNet18, Resblock
-from torch.optim import Adam
+from Util.dataset import Dataset
 from torch.nn import CrossEntropyLoss
+from torch.optim import Adam
+from torch.utils.data import DataLoader
+from torchvision import transforms
 
 
-class Train():
-    '''
+class ResNetTrainer:
+    """
     Class for handling data loading, data splitting, training, and visualization of the Intel Image Classification dataset.
 
     Attributes:
@@ -33,12 +33,12 @@ class Train():
         test_data (Dataset): The test dataset.
 
         device (str): The device to be used for computations ('cuda' if available, else 'cpu').
-    '''
+    """
 
     def __init__(self):
-        '''
+        """
         Initializes the Train class and sets the computation device.
-        '''
+        """
         self.train_data = None
         self.valid_data = None
         self.test_data = None
@@ -46,10 +46,10 @@ class Train():
         print('Using {}'.format(self.device))
 
     def prepare_data(self):
-        '''
+        """
         Prepares the data by performing transformations, splitting the data into training, validation, and test sets,
         and loading them into DataLoader objects.
-        '''
+        """
         train_transforms = transforms.Compose([
             transforms.RandomResizedCrop(scale=(0.6, 1.0), size=(150, 150)),
             transforms.RandomHorizontalFlip(),
@@ -70,7 +70,8 @@ class Train():
             "data\intel_image_classification_dataset\seg_test\seg_test", transform=eval_transforms)
 
         self.train_loader = DataLoader(
-            dataset=self.train_data, batch_size=100, shuffle=True)  # TODO Update to take a set amount of batches vs arbitrary number
+            dataset=self.train_data, batch_size=100,
+            shuffle=True)  # TODO Update to take a set amount of batches vs arbitrary number
         self.valid_loader = DataLoader(
             dataset=self.valid_data, batch_size=100, shuffle=False)
         self.test_loader = DataLoader(
@@ -78,16 +79,18 @@ class Train():
         # return self.train_loader, self.valid_loader, self.test_loader
 
     def begin_training(self, width, num_epochs, learning_rate):
-        '''
+        """
         Trains a ResNet18 model on the prepared data for a specified number of epochs.
 
         Args:
             num_epochs (int): The number of epochs for training the model.
-        '''
+        """
         model = ResNet18(3, width, Resblock, outputs=1000)
         model = model.to(self.device)
         optimizer = Adam(params=model.parameters(), lr=learning_rate)
         loss_fn = CrossEntropyLoss()
+        # TODO: Instance attributes train_losses, val_losses, train_accs, val_accs
+        #  defined outside __init__ method; should be defined inside __init__
         self.train_losses, self.val_losses = [], []
         self.train_accs, self.val_accs = [], []
         # Train for 10 epochs
@@ -113,10 +116,10 @@ class Train():
                 optimizer.step()
                 # Compute metrics
                 acc = ((output.argmax(dim=1) == label).float().mean())
-                epoch_accuracy += acc/len(self.train_loader)
-                epoch_loss += loss/len(self.train_loader)
+                epoch_accuracy += acc / len(self.train_loader)
+                epoch_loss += loss / len(self.train_loader)
             print('Epoch: {}, train accuracy: {:.2f}%, train loss: {:.4f}'.format(
-                epoch+1, epoch_accuracy*100, epoch_loss))
+                epoch + 1, epoch_accuracy * 100, epoch_loss))
             self.train_losses.append(epoch_loss.item())
             self.train_accs.append(epoch_accuracy.item())
             # Evaluation
@@ -136,10 +139,10 @@ class Train():
                     valid_loss = loss_fn(valid_output, label)
                     # Compute metrics
                     acc = ((valid_output.argmax(dim=1) == label).float().mean())
-                    epoch_valid_accuracy += acc/len(self.valid_loader)
-                    epoch_valid_loss += valid_loss/len(self.valid_loader)
+                    epoch_valid_accuracy += acc / len(self.valid_loader)
+                    epoch_valid_loss += valid_loss / len(self.valid_loader)
             print('Epoch: {}, val accuracy: {:.2f}%, val loss: {:.4f}'.format(
-                epoch+1, epoch_valid_accuracy*100, epoch_valid_loss))
+                epoch + 1, epoch_valid_accuracy * 100, epoch_valid_loss))
             self.val_losses.append(epoch_valid_loss.item())
             self.val_accs.append(epoch_valid_accuracy.item())
 
@@ -155,8 +158,8 @@ class Train():
                     test_loss_i = loss_fn(test_output_i, label)
                     # Compute metrics
                     acc = ((test_output_i.argmax(dim=1) == label).float().mean())
-                    test_accuracy += acc/len(self.test_loader)
-                    test_loss += test_loss_i/len(self.test_loader)
+                    test_accuracy += acc / len(self.test_loader)
+                    test_loss += test_loss_i / len(self.test_loader)
 
         print("Final Test loss: {:.4f}".format(test_loss))
-        print("Final Test accuracy: {:.2f}%".format(test_accuracy*100))
+        print("Final Test accuracy: {:.2f}%".format(test_accuracy * 100))

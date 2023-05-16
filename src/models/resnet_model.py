@@ -22,33 +22,28 @@
 
 import torch
 from torch import nn
-# from resblock import Resblock
 
 
+# TODO: https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
 class ResNet18(nn.Module):
-    '''
-    A PyTorch implementation of the ResNet-18 architecture.
+    """A PyTorch implementation of the ResNet-18 architecture.
 
     This class implements the ResNet-18 architecture, a widely used deep convolutional neural network architecture
     for image classification tasks. It inherits from the PyTorch nn.Module class.
 
     Attributes:
-        - layer0 (nn.Sequential): The initial layer of the ResNet-18, consisting of a convolution, max pooling, batch normalization,
-            and ReLU activation.
+        - layer0 (nn.Sequential): The initial layer of the ResNet-18, consisting of a convolution, max pooling, batch
+        normalization, and ReLU activation.
         - layer1 (nn.Sequential): The second layer of the ResNet-18, consisting of 2 residual blocks.
-
         - layer2 (nn.Sequential): The third layer of the ResNet-18, consisting of 2 residual blocks.
-
         - layer3 (nn.Sequential): The fourth layer of the ResNet-18, consisting of 2 residual blocks.
-
         - layer4 (nn.Sequential): The fifth layer of the ResNet-18, consisting of 2 residual blocks.
         - gap (torch.nn.AdaptiveAvgPool2d): Global average pooling layer.
         - fc (torch.nn.Linear): Fully connected layer for the network output.
-    '''
+    """
 
     def __init__(self, in_channels, out_channel, resblock, outputs=1000):
-        '''
-        Constructs all the necessary attributes for the ResNet18 object.
+        """Constructs all the necessary attributes for the ResNet18 object.
 
         Args:
             in_channels (int): Number of input channels.
@@ -58,7 +53,7 @@ class ResNet18(nn.Module):
             resblock (nn.Module): The type of Residual Block to use. Must be a subclass of nn.Module.
 
             outputs (int, optional): Number of output units for the last linear layer. Defaults to 1000.
-        '''
+        """
 
         super().__init__()
         self.layer0 = nn.Sequential(
@@ -75,33 +70,33 @@ class ResNet18(nn.Module):
         )
 
         self.layer2 = nn.Sequential(
-            resblock(out_channel, (out_channel*2), downsample=True),
-            resblock((out_channel*2), (out_channel*2), downsample=False)
+            resblock(out_channel, (out_channel * 2), downsample=True),
+            resblock((out_channel * 2), (out_channel * 2), downsample=False)
         )
 
         self.layer3 = nn.Sequential(
-            resblock((out_channel*2), (out_channel*4), downsample=True),
-            resblock((out_channel*4), (out_channel*4), downsample=False)
+            resblock((out_channel * 2), (out_channel * 4), downsample=True),
+            resblock((out_channel * 4), (out_channel * 4), downsample=False)
         )
 
         self.layer4 = nn.Sequential(
-            resblock((out_channel*4), (out_channel*8), downsample=True),
-            resblock((out_channel*8), (out_channel*8), downsample=False)
+            resblock((out_channel * 4), (out_channel * 8), downsample=True),
+            resblock((out_channel * 8), (out_channel * 8), downsample=False)
         )
 
         self.gap = torch.nn.AdaptiveAvgPool2d(1)
-        self.fc = torch.nn.Linear((out_channel*8), outputs)
+        self.fc = torch.nn.Linear((out_channel * 8), outputs)
 
     def forward(self, input):
-        '''
-        Performs the forward pass of the ResNet18 model.
+        """Performs the forward pass of the ResNet18 model.
 
         Args:
             input (torch.Tensor): Input tensor.
 
         Returns:
             torch.Tensor: Output tensor after applying the forward pass.
-        '''
+        """
+        # TODO: Shadows the built-in name 'input'; consider renaming the argument.
         input = self.layer0(input)
         input = self.layer1(input)
         input = self.layer2(input)
@@ -115,29 +110,23 @@ class ResNet18(nn.Module):
 
 
 class Resblock(nn.Module):
-    '''A residual block module for a convolutional neural network.
+    """A residual block module for a convolutional neural network.
 
     Args:
         in_channels (int): Number of input channels.
-
         out_channels (int): Number of output channels.
-
         downsample (bool): Indicates if the input spatial dimensions need to be downsampled.
 
     Attributes:
         conv1 (nn.Conv2d): First convolutional layer.
-
         shortcut (nn.Sequential): Shortcut connection used for downsampling.
-
         conv2 (nn.Conv2d): Second convolutional layer.
-
         bn1 (nn.BatchNorm2d): Batch normalization layer after the first convolution.
-
         bn2 (nn.BatchNorm2d): Batch normalization layer after the second convolution.
 
     Methods:
         forward(input): Performs the forward pass of the residual block.
-    '''
+    """
 
     def __init__(self, in_channels, out_channels, downsample):
         super().__init__()
@@ -158,17 +147,19 @@ class Resblock(nn.Module):
         self.bn1 = nn.BatchNorm2d(out_channels)
         self.bn2 = nn.BatchNorm2d(out_channels)
 
+    # TODO: Parameter shadows the built-in name 'input'; consider renaming the argument.
     def forward(self, input):
-        '''Performs the forward pass of the residual block.
+        """Performs the forward pass of the residual block.
 
         Args:
             input (torch.Tensor): Input tensor.
 
         Returns:
             torch.Tensor: Output tensor after applying the residual block.
-        '''
+        """
 
         shortcut = self.shortcut(input)
+        # TODO: Shadows the built-in name 'input'; consider renaming the argument.
         input = nn.ReLU()(self.bn1(self.conv1(input)))
         input = nn.ReLU()(self.bn2(self.conv2(input)))
         input = input + shortcut

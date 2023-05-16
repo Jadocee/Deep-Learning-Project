@@ -4,10 +4,9 @@ from typing import Dict
 
 from nltk.downloader import download
 from torch.cuda import is_available as has_cuda
-from optimisers.bow_classifier_optimiser import BOWClassifierOptimiser
 
+from optimisers.bow_classifier_optimiser import BOWClassifierOptimiser
 from optimisers.lstm_classifier_optimiser import LSTMClassifierOptimiser
-from trainers.bow_classifier_trainer import BOWClassifierTrainer
 from utils.definitions import MODELS_DIR, STUDIES_DIR
 
 
@@ -40,7 +39,7 @@ class Main:
         "LSTM Trainer Menu": {
             1: "Optimise Hyperparameters",
         },
-        "BOW Trainer Menu":{
+        "BOW Trainer Menu": {
             1: "Run Bag Of Words 1"
         }
     }
@@ -134,7 +133,7 @@ class Main:
                     system("cls" if name == "nt" else "clear")
             elif current_menu == "BOW Trainer Menu":
                 if choice == 0:
-                        current_menu = "Main Menu"
+                    current_menu = "Main Menu"
                 elif choice == 1:
                     print({"BagOfWords"})
                     optimiser: BOWClassifierOptimiser = BOWClassifierOptimiser(device=Main.DEVICE)
@@ -177,8 +176,9 @@ class Main:
 if __name__ == "__main__":
     Main.main()
 
-#--------------- Thomas ---------------#
-# Packaged with - dataset.py, resnet.py, train.py
+# --------------- Thomas ---------------#
+# TODO: Uncomment and integrate with main.py
+# Packaged with - dataset.py, resnet.py, resnet_trainer.py
 # Author - Thomas Bandy (c3374048)
 
 # from Util.train import Train
@@ -193,12 +193,12 @@ if __name__ == "__main__":
 # util.print_checks(test.train_data, test.valid_data, test.test_data, test.train_loader, test.valid_loader, test.test_loader)
 # test.begin_training(10, 2, 0.001)
 
-#--------------- Test all hyper-params ---------------#
+# --------------- Test all hyper-params ---------------#
 # for (w, e, lr) in widths, epochs, learn_rates:
 #     test = Train()
 #     test.prepare_data()
 #     util.print_checks(test.train_data, test.valid_data, test.test_data, test.train_loader, test.valid_loader, test.test_loader)
 #     test.begin_training(w, e, lr)
 
-#--------------- Metrics ---------------#
+# --------------- Metrics ---------------#
 # util.loss_acc_diagram(test.train_losses, test.val_losses, test.train_accs, test.val_accs)

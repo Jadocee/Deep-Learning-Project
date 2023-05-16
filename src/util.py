@@ -1,21 +1,16 @@
 import matplotlib.pyplot as plt
 
-
+# TODO: move file
 def print_checks(train_data, valid_data, test_data, train_loader, valid_loader, test_loader):
-    '''
+    """
     Prints various checks and information about the datasets and loaders.
 
-    Parameters:
+    Args:
         train_data (Dataset): Training dataset.
-
         valid_data (Dataset): Validation dataset.
-
         test_data (Dataset): Test dataset.
-
         train_loader (DataLoader): Training data loader.
-
         valid_loader (DataLoader): Validation data loader.
-
         test_loader (DataLoader): Test data loader.
 
     Prints:
@@ -25,7 +20,7 @@ def print_checks(train_data, valid_data, test_data, train_loader, valid_loader, 
 
     Note:
         This function assumes that the datasets are compatible with the data loaders.
-    '''
+    """
     # Check our dataset sizes
     print("Train: {} examples".format(len(train_data)))
     print("Valid: {} examples".format(len(valid_data)))
@@ -40,7 +35,7 @@ def print_checks(train_data, valid_data, test_data, train_loader, valid_loader, 
 
 
 def picture_diagram(data, grid_size):
-    '''
+    """
     Displays a picture diagram using matplotlib with titles corresponding to different classes.
 
     Parameters:
@@ -70,12 +65,12 @@ def picture_diagram(data, grid_size):
 
             5: street
         - The 'image' should be a tensor with dimensions (channels, height, width).
-    """'''
+    """
     fig = plt.figure()
     fig.set_figheight(12)
     fig.set_figwidth(12)
     for idx in range(16):
-        ax = fig.add_subplot(grid_size, grid_size, idx+1)
+        ax = fig.add_subplot(grid_size, grid_size, idx + 1)
         ax.axis('off')
         if data[idx][1] == 0:
             ax.set_title("buildings")
@@ -95,7 +90,7 @@ def picture_diagram(data, grid_size):
 
 
 def loss_acc_diagram(train_losses, val_losses, train_accs, val_accs):
-    '''    
+    """
     Displays a diagram showing the training and validation losses and accuracies over epochs.
 
     Parameters:
@@ -119,9 +114,10 @@ def loss_acc_diagram(train_losses, val_losses, train_accs, val_accs):
         - The lengths of all lists should be the same.
         - The losses and accuracies are plotted against the epoch number.
         - The first subplot displays the losses (y-axis) with 'train' and 'valid' lines in blue and green, respectively.
-        - The second subplot displays the accuracies (y-axis) with 'train' and 'valid' lines in blue and green, respectively.
+        - The second subplot displays the accuracies (y-axis) with 'train' and 'valid' lines in blue and green,
+        respectively.
         - The x-axis represents the epoch number.
-    '''
+    """
     fig, (ax1, ax2) = plt.subplots(2, figsize=(12, 8), sharex=True)
     ax1.plot(train_losses, color='b', label='train')
     ax1.plot(val_losses, color='g', label='valid')
