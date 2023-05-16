@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from nltk.downloader import download
 from os import system, name, mkdir
 from os.path import exists
@@ -126,7 +128,7 @@ class Main:
                     system("cls" if name == "nt" else "clear")
                     study_name: str = input("Enter study name or press enter to use default: ")
                     optimiser: LSTMClassifierOptimiser = LSTMClassifierOptimiser(device=Main.DEVICE)
-                    optimiser.run(study_name=study_name if study_name != "" else None, prune=True)
+                    optimiser.run(study_name=study_name if study_name != "" else None, prune=True, n_trials=150)
                 else:
                     print("Invalid choice. Try again.")
                     system("cls" if name == "nt" else "clear")
@@ -156,10 +158,12 @@ class Main:
         """
         if not exists(STUDIES_DIR):
             print(f"Creating directory: {STUDIES_DIR}")
-            mkdir(STUDIES_DIR)
+            path: Path = Path(STUDIES_DIR)
+            path.mkdir(parents=True, exist_ok=True)
         if not exists(MODELS_DIR):
             print(f"Creating directory: {MODELS_DIR}")
-            mkdir(MODELS_DIR)
+            path: Path = Path(MODELS_DIR)
+            path.mkdir(parents=True, exist_ok=True)
 
     @staticmethod
     def main() -> None:
