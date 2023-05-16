@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="845dccdb-01b8-40f8-b398-e8a57a8b6fe2" name="Changes" comment="fixes" />
+    <list default="true" id="845dccdb-01b8-40f8-b398-e8a57a8b6fe2" name="Changes" comment="Restored PyCharm config" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -73,21 +73,22 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\jaydo\dev\University\COMP3330\Deep-Learning-Project\data" />
@@ -185,6 +186,7 @@
       <workItem from="1683856592316" duration="9494000" />
       <workItem from="1683947688046" duration="54000" />
       <workItem from="1684207080051" duration="112000" />
+      <workItem from="1684215730747" duration="425000" />
     </task>
     <task id="LOCAL-00001" summary="Created some directories for project structure; &#10;Added .gitignore using `Python.gitignore` template (https://github.com/github/gitignore/blob/main/Python.gitignore);&#10;Added `requirements.txt` to install project dependencies to virtual environment;&#10;Created Python package directories for organizing Python classes and scripts.">
       <created>1681183751882</created>
@@ -333,13 +335,32 @@
       <option name="project" value="LOCAL" />
       <updated>1683858068835</updated>
     </task>
-    <option name="localTasksCounter" value="22" />
+    <task id="LOCAL-00022" summary="Restored .gitignore">
+      <created>1684216120212</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1684216120212</updated>
+    </task>
+    <task id="LOCAL-00023" summary="Restored PyCharm config">
+      <created>1684216156962</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1684216156962</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
+    <option name="OPEN_GENERIC_TABS">
+      <map>
+        <entry key="328be4d8-4360-4781-ab4c-e037dcc86976" value="TOOL_WINDOW" />
+      </map>
+    </option>
     <option name="RECENT_FILTERS">
       <map>
         <entry key="Branch">
@@ -362,6 +383,31 @@
     </option>
     <option name="TAB_STATES">
       <map>
+        <entry key="328be4d8-4360-4781-ab4c-e037dcc86976">
+          <value>
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="HEAD" />
+                      </list>
+                    </value>
+                  </entry>
+                  <entry key="roots">
+                    <value>
+                      <list>
+                        <option value="$PROJECT_DIR$" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+              <option name="SHOW_ONLY_AFFECTED_CHANGES" value="true" />
+            </State>
+          </value>
+        </entry>
         <entry key="MAIN">
           <value>
             <State>
@@ -370,7 +416,7 @@
                   <entry key="branch">
                     <value>
                       <list>
-                        <option value="origin/TweetClassificationBagOfWords" />
+                        <option value="origin/main" />
                       </list>
                     </value>
                   </entry>
@@ -403,7 +449,9 @@
     <MESSAGE value="- Optuna trials/optimisations are now exported to a CSV file.&#10;- The `run` method in `LSTMClassifierTrainer` now takes a `str` for the name of the optimiser to use (e.g., &quot;Adam&quot;, &quot;SGD&quot;, etc.), and then uses `getattr()` to obtain the respective `Optimiser` in `torch.optim`." />
     <MESSAGE value="- Added definitions for the paths to the directory for saved models and the directory for the saved Optuna studies.&#10;- Added more hyperparam suggestions to `LSTMClassifierOptimiser`.&#10;    - Added suggestions for params for the learning rate scheduler based on the selected scheduler&#10;- `LSTMClassifierTrainer` now defines and uses a learning rate scheduler. The scheduler is defined based on the scheduler name and relative kwargs passed to the `run` method, and step accordingly at the end of each epoch.&#10;- `LSTMModel` now takes a dropout value&#10;- Missing directories will be created" />
     <MESSAGE value="fixes" />
-    <option name="LAST_COMMIT_MESSAGE" value="fixes" />
+    <MESSAGE value="Restored .gitignore" />
+    <MESSAGE value="Restored PyCharm config" />
+    <option name="LAST_COMMIT_MESSAGE" value="Restored PyCharm config" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Deep_Learning_Project$lstm_classifier_script.coverage" NAME="lstm_classifier_script Coverage Results" MODIFIED="1683456681418" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
