@@ -120,12 +120,6 @@ class LSTMClassifierTrainer(BaseTrainer):
         test_loss, test_acc = self.evaluate(model=model, dataloader=self._test_dataloader, loss_fn=loss_fn)
         print(f"Test Loss: {test_loss:.3f}, Test Accuracy: {test_acc * 100:.2f}%")
 
-    def save(self):
-        raise NotImplementedError
-
-    def load(self):
-        raise NotImplementedError
-
     def run(self,
             model: LSTMModel,
             epochs: int = 5,
