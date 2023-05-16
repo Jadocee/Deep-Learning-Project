@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="845dccdb-01b8-40f8-b398-e8a57a8b6fe2" name="Changes" comment="fixes" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ChangesViewManager" show_ignored="true" />
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="main" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitToolBoxStore">
+    <option name="projectConfigVersion" value="5" />
+    <option name="recentBranches">
+      <RecentBranches>
+        <option name="branchesForRepo">
+          <list>
+            <RecentBranchesForRepo>
+              <option name="branches">
+                <list>
+                  <RecentBranch>
+                    <option name="branchName" value="ResNet-Thomas" />
+                    <option name="lastUsedInstant" value="1684207160" />
+                  </RecentBranch>
+                  <RecentBranch>
+                    <option name="branchName" value="main" />
+                    <option name="lastUsedInstant" value="1684207107" />
+                  </RecentBranch>
+                  <RecentBranch>
+                    <option name="branchName" value="TweetClassifier_LSTM" />
+                    <option name="lastUsedInstant" value="1683858113" />
+                  </RecentBranch>
+                  <RecentBranch>
+                    <option name="branchName" value="TweetClassificationBagOfWords" />
+                    <option name="lastUsedInstant" value="1683857256" />
+                  </RecentBranch>
+                  <RecentBranch>
+                    <option name="branchName" value="TweetClassifier" />
+                    <option name="lastUsedInstant" value="1683183055" />
+                  </RecentBranch>
+                </list>
+              </option>
+              <option name="repositoryRootUrl" value="file://$PROJECT_DIR$" />
+            </RecentBranchesForRepo>
+          </list>
+        </option>
+      </RecentBranches>
+    </option>
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="2OGJm5rjY47OEOG0MauFUeV6DwS" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\jaydo\dev\University\COMP3330\Deep-Learning-Project\data" />
+      <recent name="C:\Users\jaydo\dev\University\COMP3330\Deep-Learning-Project\src" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Python.main (1)">
+    <configuration name="lstm_classifier_script" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Deep-Learning-Project" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/lstm_classifier_script.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="main (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Deep-Learning-Project" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/main.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Python tests for test_dataset_loader.TestDatasetLoader.test_get_tweet_topic_dataset" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
+      <module name="Deep-Learning-Project" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;test_dataset_loader.TestDatasetLoader.test_get_tweet_topic_dataset&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.main (1)" />
+        <item itemvalue="Python tests.Python tests for test_dataset_loader.TestDatasetLoader.test_get_tweet_topic_dataset" />
+        <item itemvalue="Python.lstm_classifier_script" />
+        <item itemvalue="Python.main (1)" />
+        <item itemvalue="Python tests.Python tests for test_dataset_loader.TestDatasetLoader.test_get_tweet_topic_dataset" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="845dccdb-01b8-40f8-b398-e8a57a8b6fe2" name="Changes" comment="" />
+      <created>1681181141755</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1681181141755</updated>
+      <workItem from="1681181143338" duration="6055000" />
+      <workItem from="1683097790004" duration="2623000" />
+      <workItem from="1683162265539" duration="1850000" />
+      <workItem from="1683165105970" duration="18356000" />
+      <workItem from="1683198626495" duration="6804000" />
+      <workItem from="1683269917954" duration="2141000" />
+      <workItem from="1683439627749" duration="14704000" />
+      <workItem from="1683546572870" duration="1476000" />
+      <workItem from="1683591365021" duration="6308000" />
+      <workItem from="1683783889903" duration="17013000" />
+      <workItem from="1683856592316" duration="9494000" />
+      <workItem from="1683947688046" duration="54000" />
+      <workItem from="1684207080051" duration="112000" />
+    </task>
+    <task id="LOCAL-00001" summary="Created some directories for project structure; &#10;Added .gitignore using `Python.gitignore` template (https://github.com/github/gitignore/blob/main/Python.gitignore);&#10;Added `requirements.txt` to install project dependencies to virtual environment;&#10;Created Python package directories for organizing Python classes and scripts.">
+      <created>1681183751882</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1681183751882</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Added datasets for both classification problems">
+      <created>1681185734550</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1681185734550</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Added datasets for both classification problems">
+      <created>1681185986394</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1681185986394</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Added datasets for both classification problems">
+      <created>1681200756075</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1681200756075</updated>
+    </task>
+    <task id="LOCAL-00005" summary="- Updated .gitignore to exclude `out/` directory.&#10;- Added NLTK package as a dependency.">
+      <created>1683103423992</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1683103423992</updated>
+    </task>
+    <task id="LOCAL-00006" summary="- Added the 'dataset' package as a dependency">
+      <created>1683103527093</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1683103527093</updated>
+    </task>
+    <task id="LOCAL-00007" summary="- Cleaned up `main.py`&#10;- Added `mock_data` for the image classification task.">
+      <created>1683164683799</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1683164683799</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Added torchtext to requirements.txt">
+      <created>1683165567580</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1683165567580</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Added definitions.py storing constants like directory paths">
+      <created>1683182965714</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1683182965714</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Added a base model for other models to extend">
+      <created>1683183352158</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1683183352158</updated>
+    </task>
+    <task id="LOCAL-00011" summary="Added a utility class that contains methods for processing and cleaning text and other data">
+      <created>1683183403605</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1683183403605</updated>
+    </task>
+    <task id="LOCAL-00012" summary="Added LSTM model">
+      <created>1683184431353</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1683184431353</updated>
+    </task>
+    <task id="LOCAL-00013" summary="Started work on creating a trainer">
+      <created>1683184693349</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1683184693349</updated>
+    </task>
+    <task id="LOCAL-00014" summary="Added a base trainer class for other trainers to inherit from; updated `LSTMClassifierTrainer` to extend `BaseTrainer`">
+      <created>1683272514974</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1683272514974</updated>
+    </task>
+    <task id="LOCAL-00015" summary="Test for downloading Tweet Topic Single Dataset splits">
+      <created>1683272557541</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1683272557541</updated>
+    </task>
+    <task id="LOCAL-00016" summary="Optimised imports and cleaned up code">
+      <created>1683272840759</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1683272840759</updated>
+    </task>
+    <task id="LOCAL-00017" summary="Added Optuna requirement.&#10;&#10;Optuna is a hyperparameter optimisation library. You can read more about it at https://optuna.org">
+      <created>1683440210121</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1683440210121</updated>
+    </task>
+    <task id="LOCAL-00018" summary="Ready for hyperparameter tuning.&#10;&#10;There are a few problems with the code that I was hoping to fix after testing a few things, but it has gotten late. Here is the changelog:&#10;&#10;- Added an optimiser class for performing hyperparameter tuning using Optuna.&#10;- Extended BaseOptimiser to create LSTMClassifierOptimiser&#10;    - Uses LSTMClassifierTrainer and LSTMClassifierModel to find the best accuracy from a set of suggested hyperparameters.&#10;- Updated the console menu in main.py&#10;    - Check CUDA availability&#10;    - Download NLTK data packages required for text standardisation&#10;    - Perform hyperparameter optimisation/tuning for LSTM Tweet Classifier&#10;    &#10;NOTE: You may need to comment line 13 in data_processing_utils.py (`STOP_WORDS`) to be able to compile and run the project if you are missing the required NLTK data packages. Do this, and then navigate the console menu to download these, after which you can uncomment the line.">
+      <created>1683457992681</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1683457992681</updated>
+    </task>
+    <task id="LOCAL-00019" summary="- Optuna trials/optimisations are now exported to a CSV file.&#10;- The `run` method in `LSTMClassifierTrainer` now takes a `str` for the name of the optimiser to use (e.g., &quot;Adam&quot;, &quot;SGD&quot;, etc.), and then uses `getattr()` to obtain the respective `Optimiser` in `torch.optim`.">
+      <created>1683786915597</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1683786915597</updated>
+    </task>
+    <task id="LOCAL-00020" summary="- Added definitions for the paths to the directory for saved models and the directory for the saved Optuna studies.&#10;- Added more hyperparam suggestions to `LSTMClassifierOptimiser`.&#10;    - Added suggestions for params for the learning rate scheduler based on the selected scheduler&#10;- `LSTMClassifierTrainer` now defines and uses a learning rate scheduler. The scheduler is defined based on the scheduler name and relative kwargs passed to the `run` method, and step accordingly at the end of each epoch.&#10;- `LSTMModel` now takes a dropout value&#10;- Missing directories will be created">
+      <created>1683798491157</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1683798491157</updated>
+    </task>
+    <task id="LOCAL-00021" summary="fixes">
+      <created>1683858068835</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1683858068835</updated>
+    </task>
+    <option name="localTasksCounter" value="22" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="RECENT_FILTERS">
+      <map>
+        <entry key="Branch">
+          <value>
+            <list>
+              <RecentGroup>
+                <option name="FILTER_VALUES">
+                  <option value="master" />
+                </option>
+              </RecentGroup>
+              <RecentGroup>
+                <option name="FILTER_VALUES">
+                  <option value="origin/TweetClassifier_LSTM" />
+                </option>
+              </RecentGroup>
+            </list>
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="origin/TweetClassificationBagOfWords" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Created some directories for project structure; &#10;Added .gitignore using `Python.gitignore` template (https://github.com/github/gitignore/blob/main/Python.gitignore);&#10;Added `requirements.txt` to install project dependencies to virtual environment;&#10;Created Python package directories for organizing Python classes and scripts." />
+    <MESSAGE value="Added datasets for both classification problems" />
+    <MESSAGE value="- Updated .gitignore to exclude `out/` directory.&#10;- Added NLTK package as a dependency." />
+    <MESSAGE value="- Added the 'dataset' package as a dependency" />
+    <MESSAGE value="- Added the 'datasets' package as a dependency" />
+    <MESSAGE value="- Cleaned up `main.py`&#10;- Added `mock_data` for the image classification task." />
+    <MESSAGE value="Added torchtext to requirements.txt" />
+    <MESSAGE value="Added definitions.py storing constants like directory paths" />
+    <MESSAGE value="Added a base model for other models to extend" />
+    <MESSAGE value="Added a utility class that contains methods for processing and cleaning text and other data" />
+    <MESSAGE value="Added LSTM model" />
+    <MESSAGE value="Started work on creating a trainer" />
+    <MESSAGE value="Added a base trainer class for other trainers to inherit from; updated `LSTMClassifierTrainer` to extend `BaseTrainer`" />
+    <MESSAGE value="Test for downloading Tweet Topic Single Dataset splits" />
+    <MESSAGE value="Optimised imports and cleaned up code" />
+    <MESSAGE value="Added Optuna requirement.&#10;&#10;Optuna is a hyperparameter optimisation library. You can read more about it at https://optuna.org" />
+    <MESSAGE value="Ready for hyperparameter tuning.&#10;&#10;There are a few problems with the code that I was hoping to fix after testing a few things, but it has gotten late. Here is the changelog:&#10;&#10;- Added an optimiser class for performing hyperparameter tuning using Optuna.&#10;- Extended BaseOptimiser to create LSTMClassifierOptimiser&#10;    - Uses LSTMClassifierTrainer and LSTMClassifierModel to find the best accuracy from a set of suggested hyperparameters.&#10;- Updated the console menu in main.py&#10;    - Check CUDA availability&#10;    - Download NLTK data packages required for text standardisation&#10;    - Perform hyperparameter optimisation/tuning for LSTM Tweet Classifier&#10;    &#10;NOTE: You may need to comment line 13 in data_processing_utils.py (`STOP_WORDS`) to be able to compile and run the project if you are missing the required NLTK data packages. Do this, and then navigate the console menu to download these, after which you can uncomment the line." />
+    <MESSAGE value="- Optuna trials/optimisations are now exported to a CSV file.&#10;- The `run` method in `LSTMClassifierTrainer` now takes a `str` for the name of the optimiser to use (e.g., &quot;Adam&quot;, &quot;SGD&quot;, etc.), and then uses `getattr()` to obtain the respective `Optimiser` in `torch.optim`." />
+    <MESSAGE value="- Added definitions for the paths to the directory for saved models and the directory for the saved Optuna studies.&#10;- Added more hyperparam suggestions to `LSTMClassifierOptimiser`.&#10;    - Added suggestions for params for the learning rate scheduler based on the selected scheduler&#10;- `LSTMClassifierTrainer` now defines and uses a learning rate scheduler. The scheduler is defined based on the scheduler name and relative kwargs passed to the `run` method, and step accordingly at the end of each epoch.&#10;- `LSTMModel` now takes a dropout value&#10;- Missing directories will be created" />
+    <MESSAGE value="fixes" />
+    <option name="LAST_COMMIT_MESSAGE" value="fixes" />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/Deep_Learning_Project$lstm_classifier_script.coverage" NAME="lstm_classifier_script Coverage Results" MODIFIED="1683456681418" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+    <SUITE FILE_PATH="coverage/Deep_Learning_Project$.coverage" NAME=" Coverage Results" MODIFIED="1683635251694" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/Deep_Learning_Project$main__1_.coverage" NAME="main (1) Coverage Results" MODIFIED="1683866853255" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+  </component>
+</project>
