@@ -2,14 +2,14 @@ import string
 import warnings
 from collections import Counter
 from typing import List, Set, Iterable, Union
-from datasets import Dataset
 
+import numpy as np
 from contractions import fix as contractions_fix
+from datasets import Dataset
 from nltk import word_tokenize
 from nltk.corpus import stopwords
 from nltk.lm import Vocabulary
 from nltk.stem import WordNetLemmatizer, PorterStemmer
-import numpy as np
 from torchtext.vocab import build_vocab_from_iterator, Vocab
 
 
@@ -114,7 +114,7 @@ class DataProcessingUtils:
         """
         ids = [vocab[token] for token in tokens]
         return ids
-    
+
     @staticmethod
     def numericalize_data(example, vocab):
         ids = [vocab[token] for token in example['tokens']]
@@ -122,13 +122,13 @@ class DataProcessingUtils:
 
     def multi_hot_data(example, num_classes):
         encoded = np.zeros((num_classes,))
-        encoded[example['ids']] = 1 
+        encoded[example['ids']] = 1
         return {'multi_hot': encoded}
 
     @staticmethod
-    def create_vocab_2(train_data:Dataset, valid_Data:Dataset, test_data: Dataset) -> Vocab:
+    def create_vocab_2(train_data: Dataset, valid_Data: Dataset, test_data: Dataset) -> Vocab:
         vocab = build_vocab_from_iterator(train_data['tokens'],
-                                                    min_freq=5,
-                                                    specials=['<unk>', '<pad>'])
+                                          min_freq=5,
+                                          specials=['<unk>', '<pad>'])
         vocab.set_default_index(vocab['<unk>'])
         return vocab
