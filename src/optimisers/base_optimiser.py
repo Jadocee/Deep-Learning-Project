@@ -47,12 +47,12 @@ class BaseOptimiser(ABC):
 
     def run(self, study_name: Optional[str] = None, n_trials: int = 100, prune: bool = True,
             n_startup_trials: Optional[int] = None, n_warmup_steps: int = 10,
-            visualisations: Optional[Iterable[str]] = None) -> None:
+            visualisations: Optional[List[str]] = None) -> None:
         """
         Runs the hyperparameter optimisation process.
 
         Args:
-            visualisations (Iterable[str], optional): The list of Optuna visualisations to generate. If not specified,
+            visualisations (List[str], optional): The list of Optuna visualisations to generate. If not specified,
                 no visualisations will be generated. Defaults to None.
             n_warmup_steps (int, optional): The number of steps to be performed during each trial, before pruning is
                 enabled, where a step can be an iteration of training or a forward pass of the model, such as an epoch.
@@ -97,34 +97,35 @@ class BaseOptimiser(ABC):
 
             output_dir: str = join(STUDIES_DIR, study.study_name)
             # Create visualisations and save them to a file
-            for vis in visualisations:
-                if vis == "slice":
-                    ax: Axes = visualization.plot_slice(study)
-                    ax.set_title("Slice Plot")
-                    ax.figure.savefig(join(output_dir, "slice.png"))
-                    print(f"Saved slice plot to {output_dir}")
-                elif vis == "contour":
-                    ax: Axes = visualization.plot_contour(study)
-                    ax.set_title("Contour Plot")
-                    ax.figure.savefig(join(output_dir, "contour.png"))
-                    print(f"Saved contour plot to {output_dir}")
-                elif vis == "parallel_coordinate":
-                    ax: Axes = visualization.plot_parallel_coordinate(study)
-                    ax.set_title("Parallel Coordinate Plot")
-                    ax.figure.savefig(join(output_dir, "parallel_coordinate.png"))
-                    print(f"Saved parallel coordinate plot to {output_dir}")
-                elif vis == "param_importances":
-                    ax: Axes = plot_param_importances(study)
-                    ax.set_title("Parameter Importances")
-                    ax.figure.savefig(join(output_dir, "param_importances.png"))
-                    print(f"Saved parameter importances plot to {output_dir}")
-                elif vis == "optimisation_history":
-                    ax: Axes = plot_optimization_history(study)
-                    ax.set_title("Optimisation History")
-                    ax.figure.savefig(join(output_dir, "optimisation_history.png"))
-                    print(f"Saved optimisation history plot to {output_dir}")
-                else:
-                    print(f"Invalid visualisation: {vis}")
+            if visualisations and len(visualisations) > 0:
+                for vis in visualisations:
+                    if vis == "slice":
+                        ax: Axes = visualization.plot_slice(study)
+                        ax.set_title("Slice Plot")
+                        ax.figure.savefig(join(output_dir, "slice.png"))
+                        print(f"Saved slice plot to {output_dir}")
+                    elif vis == "contour":
+                        ax: Axes = visualization.plot_contour(study)
+                        ax.set_title("Contour Plot")
+                        ax.figure.savefig(join(output_dir, "contour.png"))
+                        print(f"Saved contour plot to {output_dir}")
+                    elif vis == "parallel_coordinate":
+                        ax: Axes = visualization.plot_parallel_coordinate(study)
+                        ax.set_title("Parallel Coordinate Plot")
+                        ax.figure.savefig(join(output_dir, "parallel_coordinate.png"))
+                        print(f"Saved parallel coordinate plot to {output_dir}")
+                    elif vis == "param_importances":
+                        ax: Axes = plot_param_importances(study)
+                        ax.set_title("Parameter Importances")
+                        ax.figure.savefig(join(output_dir, "param_importances.png"))
+                        print(f"Saved parameter importances plot to {output_dir}")
+                    elif vis == "optimisation_history":
+                        ax: Axes = plot_optimization_history(study)
+                        ax.set_title("Optimisation History")
+                        ax.figure.savefig(join(output_dir, "optimisation_history.png"))
+                        print(f"Saved optimisation history plot to {output_dir}")
+                    else:
+                        print(f"Invalid visualisation: {vis}")
 
             # Save the results to a CSV file
             df: DataFrame = study.trials_dataframe()
