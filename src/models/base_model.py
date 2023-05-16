@@ -1,7 +1,6 @@
+import torch
 from abc import ABC, abstractmethod
 from os.path import join
-
-import torch
 from torch.nn import ModuleList
 
 from utils.definitions import MODELS_DIR

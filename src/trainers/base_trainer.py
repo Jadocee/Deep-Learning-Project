@@ -1,9 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import Tuple
-
 from torch.nn import CrossEntropyLoss
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
+from typing import Tuple
 
 from models.base_model import BaseModel
 

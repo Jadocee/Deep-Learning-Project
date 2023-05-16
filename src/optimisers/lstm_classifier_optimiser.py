@@ -1,12 +1,11 @@
 from itertools import chain
-from typing import Tuple, Union, Dict, List, Optional, Any
-
 from nltk.lm import Vocabulary
 from optuna import Trial
 from torch import Tensor, stack
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader
 from torchtext.vocab import Vocab
+from typing import Tuple, Union, Dict, List, Optional, Any
 
 from models.lstm_model import LSTMModel
 from optimisers.base_optimiser import BaseOptimiser

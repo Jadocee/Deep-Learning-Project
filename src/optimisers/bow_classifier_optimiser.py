@@ -1,9 +1,8 @@
-from typing import Tuple, Union
-
 from nltk.lm import Vocabulary
 from optuna import Trial
 from torch.utils.data import DataLoader
 from torchtext.vocab import Vocab
+from typing import Tuple, Union
 
 from models.bow_model import BOWModel
 from optimisers.base_optimiser import BaseOptimiser
