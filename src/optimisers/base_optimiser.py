@@ -10,6 +10,8 @@ from optuna.pruners import MedianPruner, NopPruner
 from optuna.trial import FrozenTrial, TrialState
 from pandas import DataFrame
 
+from utils.definitions import STUDIES_DIR
+
 
 class BaseOptimiser(ABC):
     """
@@ -17,8 +19,6 @@ class BaseOptimiser(ABC):
     should be implemented for the specific problem at hand.
     """
     _device: str
-
-    # TODO: Add dictionaries for storing the best hyperparameters and the best model.
 
     def __init__(self, device: str = "cpu") -> None:
         """
