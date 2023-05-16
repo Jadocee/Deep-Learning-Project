@@ -106,6 +106,7 @@ class Main:
                     download("punkt")
                     download("wordnet")
                 elif choice == 4:
+                    print(f"CUDA is {'available' if has_cuda() else 'not available'}")
                     input("Press any key to continue...")
                     system("cls" if name == "nt" else "clear")
                 else:
