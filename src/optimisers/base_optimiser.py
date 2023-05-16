@@ -46,14 +46,19 @@ class BaseOptimiser(ABC):
         raise NotImplementedError
 
     def run(self, study_name: Optional[str] = None, n_trials: int = 100, prune: bool = True,
-            n_warmup_steps: Optional[int] = None, visualisations: Optional[Iterable[str]] = None) -> None:
+            n_startup_trials: Optional[int] = None, n_warmup_steps: int = 10,
+            visualisations: Optional[Iterable[str]] = None) -> None:
         """
         Runs the hyperparameter optimisation process.
 
         Args:
             visualisations (Iterable[str], optional): The list of Optuna visualisations to generate. If not specified,
                 no visualisations will be generated. Defaults to None.
-            n_warmup_steps (int, optional): The number of steps to be performed before pruning is enabled. If not
+            n_warmup_steps (int, optional): The number of steps to be performed during each trial, before pruning is
+                enabled, where a step can be an iteration of training or a forward pass of the model, such as an epoch.
+                The warmup steps are usually used to allow the model to converge to a reasonable solution before
+                pruning is enabled. Defaults to 10.
+            n_startup_trials (int, optional): The number of trials to be performed before pruning is enabled. If not
                 specified, defaults to 10% of the total number of trials. Defaults to None.
             study_name (str, optional): The name used to identify the study. If not specified, uses the default study
                 name provided by Optuna. Defaults to None.
@@ -67,11 +72,13 @@ class BaseOptimiser(ABC):
         optuna_logging.get_logger("optuna").addHandler(logging.StreamHandler(stdout))
 
         # Create the study
-        study: Study = create_study(direction="maximize",
-                                    study_name=study_name,
-                                    pruner=MedianPruner(
-                                        n_warmup_steps=n_warmup_steps if n_warmup_steps else n_trials * 0.1
-                                    ) if prune else NopPruner())
+        study: Study = create_study(
+            direction="maximize",
+            study_name=study_name,
+            pruner=MedianPruner(n_warmup_steps=n_warmup_steps,
+                                n_startup_trials=n_startup_trials if n_startup_trials
+                                else n_trials * 0.1) if prune else NopPruner()
+        )
         try:
             study.optimize(self._objective, n_trials=n_trials)
             pruned_trials: List[FrozenTrial] = study.get_trials(deepcopy=False, states=[TrialState.PRUNED])
