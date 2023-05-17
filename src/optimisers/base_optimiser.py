@@ -1,5 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
+from pathlib import Path
+
 from matplotlib.axes import Axes
 from optuna import Trial, Study, create_study, visualization
 from optuna import logging as optuna_logging
@@ -96,6 +98,8 @@ class BaseOptimiser(ABC):
                 print(f"\t{key}: {value}")
 
             output_dir: str = join(STUDIES_DIR, study.study_name)
+            output_path: Path = Path(output_dir)
+            output_path.mkdir(parents=True, exist_ok=True)
             # Create visualisations and save them to a file
             if visualisations and len(visualisations) > 0:
                 for vis in visualisations:
