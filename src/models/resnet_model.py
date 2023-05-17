@@ -24,7 +24,6 @@ import torch
 from torch import nn
 
 
-# TODO: https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
 class ResNet18(nn.Module):
     """A PyTorch implementation of the ResNet-18 architecture.
 
@@ -57,31 +56,30 @@ class ResNet18(nn.Module):
 
         super().__init__()
         self.layer0 = nn.Sequential(
-            nn.Conv2d(in_channels, out_channel,
-                      kernel_size=7, stride=2, padding=3),
+            nn.Conv2d(in_channels, out_channel, kernel_size=7, stride=2, padding=3),
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
             nn.BatchNorm2d(out_channel),
-            nn.ReLU()
+            nn.ReLU(),
         )
 
         self.layer1 = nn.Sequential(
             resblock(out_channel, out_channel, downsample=False),
-            resblock(out_channel, out_channel, downsample=False)
+            resblock(out_channel, out_channel, downsample=False),
         )
 
         self.layer2 = nn.Sequential(
             resblock(out_channel, (out_channel * 2), downsample=True),
-            resblock((out_channel * 2), (out_channel * 2), downsample=False)
+            resblock((out_channel * 2), (out_channel * 2), downsample=False),
         )
 
         self.layer3 = nn.Sequential(
             resblock((out_channel * 2), (out_channel * 4), downsample=True),
-            resblock((out_channel * 4), (out_channel * 4), downsample=False)
+            resblock((out_channel * 4), (out_channel * 4), downsample=False),
         )
 
         self.layer4 = nn.Sequential(
             resblock((out_channel * 4), (out_channel * 8), downsample=True),
-            resblock((out_channel * 8), (out_channel * 8), downsample=False)
+            resblock((out_channel * 8), (out_channel * 8), downsample=False),
         )
 
         self.gap = torch.nn.AdaptiveAvgPool2d(1)
@@ -96,7 +94,6 @@ class ResNet18(nn.Module):
         Returns:
             torch.Tensor: Output tensor after applying the forward pass.
         """
-        # TODO: Shadows the built-in name 'input'; consider renaming the argument.
         input = self.layer0(input)
         input = self.layer1(input)
         input = self.layer2(input)
@@ -105,7 +102,6 @@ class ResNet18(nn.Module):
         input = self.gap(input)
         input = input.view(input.size(0), -1)
         input = self.fc(input)
-
         return input
 
 
@@ -132,22 +128,24 @@ class Resblock(nn.Module):
         super().__init__()
         if downsample:
             self.conv1 = nn.Conv2d(
-                in_channels, out_channels, kernel_size=3, stride=2, padding=1)
+                in_channels, out_channels, kernel_size=3, stride=2, padding=1
+            )
             self.shortcut = nn.Sequential(
                 nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=2),
-                nn.BatchNorm2d(out_channels)
+                nn.BatchNorm2d(out_channels),
             )
         else:
             self.conv1 = nn.Conv2d(
-                in_channels, out_channels, kernel_size=3, stride=1, padding=1)
+                in_channels, out_channels, kernel_size=3, stride=1, padding=1
+            )
             self.shortcut = nn.Sequential()
 
-        self.conv2 = nn.Conv2d(out_channels, out_channels,
-                               kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(
+            out_channels, out_channels, kernel_size=3, stride=1, padding=1
+        )
         self.bn1 = nn.BatchNorm2d(out_channels)
         self.bn2 = nn.BatchNorm2d(out_channels)
 
-    # TODO: Parameter shadows the built-in name 'input'; consider renaming the argument.
     def forward(self, input):
         """Performs the forward pass of the residual block.
 
@@ -157,10 +155,8 @@ class Resblock(nn.Module):
         Returns:
             torch.Tensor: Output tensor after applying the residual block.
         """
-
         shortcut = self.shortcut(input)
-        # TODO: Shadows the built-in name 'input'; consider renaming the argument.
-        input = nn.ReLU()(self.bn1(self.conv1(input)))
-        input = nn.ReLU()(self.bn2(self.conv2(input)))
+        input = nn.Sigmoid()(self.bn1(self.conv1(input)))
+        input = nn.Sigmoid()(self.bn2(self.conv2(input)))
         input = input + shortcut
-        return nn.ReLU()(input)
+        return nn.Sigmoid()(input)

@@ -9,6 +9,7 @@ from torch.cuda import is_available as has_cuda
 from optimisers.bow_classifier_optimiser import BOWClassifierOptimiser
 from optimisers.lstm_classifier_optimiser import LSTMClassifierOptimiser
 from utils.definitions import MODELS_DIR, STUDIES_DIR
+from trainers.cnn_trainer import menu_prompt
 
 
 class Main:
@@ -31,18 +32,13 @@ class Main:
             4: "Check CUDA Availability",
         },
         "Image Classifier Menu": {
-            1: "TODO",
+            1: "Resnet Model",
         },
-        "Tweet Classifier Menu": {
-            1: "LSTM Trainer",
-            2: "BOW Trainer"
-        },
+        "Tweet Classifier Menu": {1: "LSTM Trainer", 2: "BOW Trainer"},
         "LSTM Trainer Menu": {
             1: "Optimise Hyperparameters",
         },
-        "BOW Trainer Menu": {
-            1: "Run Bag Of Words 1"
-        }
+        "BOW Trainer Menu": {1: "Run Bag Of Words 1"},
     }
     """
     A dictionary containing the structure of the menus to be displayed on the command-line interface.
@@ -112,6 +108,15 @@ class Main:
                 else:
                     print("Invalid choice. Try again.")
                     system("cls" if name == "nt" else "clear")
+            elif current_menu == "Image Classifier Menu":
+                if choice == 0:
+                    current_menu = "Main Menu"
+                elif choice == 1:
+                    system("cls" if name == "nt" else "clear")
+                    menu_prompt("resnet18", 50, 50, 0.001)
+                    # TODO modify to ask users for hyper params
+                else:
+                    print("Invalid choice. Try again.")
             elif current_menu == "Tweet Classifier Menu":
                 if choice == 0:
                     current_menu = "Main Menu"
@@ -127,10 +132,21 @@ class Main:
                     current_menu = "Main Menu"
                 elif choice == 1:
                     system("cls" if name == "nt" else "clear")
-                    study_name: str = input("Enter study name or press enter to use default: ")
+
+                    study_name: str = input(
+                        "Enter study name or press enter to use default: "
+                    )
+                    optimiser: LSTMClassifierOptimiser = LSTMClassifierOptimiser(
+                        device=Main.DEVICE
+                    )
+                    optimiser.run(
+                        study_name=study_name if study_name != "" else None, prune=True
+                    )
+            study_name: str = input("Enter study name or press enter to use default: ")
                     optimiser: LSTMClassifierOptimiser = LSTMClassifierOptimiser(device=Main.DEVICE)
                     optimiser.run(study_name=study_name if study_name != "" else None, prune=True, n_trials=200,
                                   n_warmup_steps=5, visualisations=["param_importances", "optimisation_history"])
+
                 else:
                     print("Invalid choice. Try again.")
                     system("cls" if name == "nt" else "clear")
@@ -139,7 +155,9 @@ class Main:
                     current_menu = "Main Menu"
                 elif choice == 1:
                     print({"BagOfWords"})
-                    optimiser: BOWClassifierOptimiser = BOWClassifierOptimiser(device=Main.DEVICE)
+                    optimiser: BOWClassifierOptimiser = BOWClassifierOptimiser(
+                        device=Main.DEVICE
+                    )
                     optimiser.run(None, prune=True)
             elif current_menu == "Image Classifier Menu":
                 if choice == 0:
@@ -180,30 +198,3 @@ class Main:
 
 if __name__ == "__main__":
     Main.main()
-
-# --------------- Thomas ---------------#
-# TODO: Uncomment and integrate with main.py
-# Packaged with - dataset.py, resnet.py, resnet_trainer.py
-# Author - Thomas Bandy (c3374048)
-
-# from Util.train import Train
-# from Util import util
-# learn_rates = [0.0001, 0.001, 0.01]
-# epochs = [5, 10, 50]
-# widths = [10, 50, 100, 500]
-# activation_function = ['ReLU', 'Sigmoid', 'CeLU']
-# test = Train()
-
-# test.prepare_data()
-# util.print_checks(test.train_data, test.valid_data, test.test_data, test.train_loader, test.valid_loader, test.test_loader)
-# test.begin_training(10, 2, 0.001)
-
-# --------------- Test all hyper-params ---------------#
-# for (w, e, lr) in widths, epochs, learn_rates:
-#     test = Train()
-#     test.prepare_data()
-#     util.print_checks(test.train_data, test.valid_data, test.test_data, test.train_loader, test.valid_loader, test.test_loader)
-#     test.begin_training(w, e, lr)
-
-# --------------- Metrics ---------------#
-# util.loss_acc_diagram(test.train_losses, test.val_losses, test.train_accs, test.val_accs)
