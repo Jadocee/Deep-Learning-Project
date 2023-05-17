@@ -1,5 +1,6 @@
-from os import system, name, mkdir
+from os import system, name
 from os.path import exists
+from pathlib import Path
 from typing import Dict
 
 from nltk.downloader import download
@@ -101,6 +102,7 @@ class Main:
                     download("punkt")
                     download("wordnet")
                 elif choice == 4:
+                    print(f"CUDA is {'available' if has_cuda() else 'not available'}")
                     input("Press any key to continue...")
                     system("cls" if name == "nt" else "clear")
                 else:
@@ -130,6 +132,7 @@ class Main:
                     current_menu = "Main Menu"
                 elif choice == 1:
                     system("cls" if name == "nt" else "clear")
+
                     study_name: str = input(
                         "Enter study name or press enter to use default: "
                     )
@@ -139,6 +142,11 @@ class Main:
                     optimiser.run(
                         study_name=study_name if study_name != "" else None, prune=True
                     )
+            study_name: str = input("Enter study name or press enter to use default: ")
+                    optimiser: LSTMClassifierOptimiser = LSTMClassifierOptimiser(device=Main.DEVICE)
+                    optimiser.run(study_name=study_name if study_name != "" else None, prune=True, n_trials=200,
+                                  n_warmup_steps=5, visualisations=["param_importances", "optimisation_history"])
+
                 else:
                     print("Invalid choice. Try again.")
                     system("cls" if name == "nt" else "clear")
@@ -170,10 +178,12 @@ class Main:
         """
         if not exists(STUDIES_DIR):
             print(f"Creating directory: {STUDIES_DIR}")
-            mkdir(STUDIES_DIR)
+            path: Path = Path(STUDIES_DIR)
+            path.mkdir(parents=True, exist_ok=True)
         if not exists(MODELS_DIR):
             print(f"Creating directory: {MODELS_DIR}")
-            mkdir(MODELS_DIR)
+            path: Path = Path(MODELS_DIR)
+            path.mkdir(parents=True, exist_ok=True)
 
     @staticmethod
     def main() -> None:
