@@ -1,4 +1,5 @@
 import logging
+import os.path
 from abc import ABC, abstractmethod
 from pathlib import Path
 
@@ -98,8 +99,9 @@ class BaseOptimiser(ABC):
                 print(f"\t{key}: {value}")
 
             output_dir: str = join(STUDIES_DIR, study.study_name)
-            output_path: Path = Path(output_dir)
-            output_path.mkdir(parents=True, exist_ok=True)
+            if not os.path.exists(output_dir):
+                output_path: Path = Path(output_dir)
+                output_path.mkdir(parents=True, exist_ok=True)
             # Create visualisations and save them to a file
             if visualisations and len(visualisations) > 0:
                 for vis in visualisations:
@@ -133,7 +135,7 @@ class BaseOptimiser(ABC):
 
             # Save the results to a CSV file
             df: DataFrame = study.trials_dataframe()
-            out_csv: str = join(STUDIES_DIR, f"{study.study_name}.csv")
+            out_csv: str = join(output_dir, "results.csv")
             df.to_csv(out_csv, index=False)
             print(f"Saved results to {out_csv}")
 
