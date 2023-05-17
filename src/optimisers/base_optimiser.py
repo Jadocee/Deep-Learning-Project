@@ -1,7 +1,10 @@
 import logging
 import os.path
 from abc import ABC, abstractmethod
+from os.path import join
 from pathlib import Path
+from sys import stdout
+from typing import List, Optional
 
 from matplotlib.axes import Axes
 from optuna import Trial, Study, create_study, visualization
@@ -9,10 +12,7 @@ from optuna import logging as optuna_logging
 from optuna.pruners import MedianPruner, NopPruner
 from optuna.trial import FrozenTrial, TrialState
 from optuna.visualization.matplotlib import plot_param_importances, plot_optimization_history
-from os.path import join
 from pandas import DataFrame
-from sys import stdout
-from typing import List, Optional, Iterable
 
 from utils.definitions import STUDIES_DIR
 

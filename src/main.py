@@ -1,10 +1,10 @@
+from os import system, name
+from os.path import exists
 from pathlib import Path
+from typing import Dict
 
 from nltk.downloader import download
-from os import system, name, mkdir
-from os.path import exists
 from torch.cuda import is_available as has_cuda
-from typing import Dict
 
 from optimisers.bow_classifier_optimiser import BOWClassifierOptimiser
 from optimisers.lstm_classifier_optimiser import LSTMClassifierOptimiser

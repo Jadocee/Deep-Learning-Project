@@ -1,5 +1,7 @@
-import numpy as np
 import string
+from typing import List, Set, Iterable, Union
+
+import numpy as np
 from contractions import fix as contractions_fix
 from datasets import Dataset
 from nltk import word_tokenize
@@ -7,7 +9,6 @@ from nltk.corpus import stopwords
 from nltk.lm import Vocabulary
 from nltk.stem import WordNetLemmatizer, PorterStemmer
 from torchtext.vocab import build_vocab_from_iterator, Vocab
-from typing import List, Set, Iterable, Union
 
 
 class DataProcessingUtils:

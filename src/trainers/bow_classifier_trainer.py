@@ -1,10 +1,11 @@
+from typing import Dict, Optional
+
 import numpy as np
 import torch
 from optuna import Trial
 from torch.nn import CrossEntropyLoss
 from torch.utils.data import DataLoader
 from torchtext.vocab import Vocab
-from typing import Dict, Optional
 
 from models.bow_model import BOWModel
 from trainers.base_trainer import BaseTrainer

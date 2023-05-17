@@ -1,3 +1,5 @@
+from typing import List, Tuple, Optional, Union, Dict, Any
+
 import torch.optim as optim
 from numpy import mean, float64, ndarray
 from optuna import Trial
@@ -10,7 +12,6 @@ from torch.optim import Optimizer, lr_scheduler
 from torch.optim.lr_scheduler import LRScheduler, ReduceLROnPlateau
 from torch.utils.data import DataLoader
 from torchtext.vocab import Vocab
-from typing import List, Tuple, Optional, Union, Dict, Any
 
 from models.lstm_model import LSTMModel
 from trainers.base_trainer import BaseTrainer
