@@ -129,7 +129,8 @@ class Main:
                     system("cls" if name == "nt" else "clear")
                     study_name: str = input("Enter study name or press enter to use default: ")
                     optimiser: LSTMClassifierOptimiser = LSTMClassifierOptimiser(device=Main.DEVICE)
-                    optimiser.run(study_name=study_name if study_name != "" else None, prune=True, n_trials=150)
+                    optimiser.run(study_name=study_name if study_name != "" else None, prune=True, n_trials=200,
+                                  n_warmup_steps=5, visualisations=["param_importances", "optimisation_history"])
                 else:
                     print("Invalid choice. Try again.")
                     system("cls" if name == "nt" else "clear")
