@@ -192,14 +192,14 @@ class VGGnet(nn.Module):
     #             layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
     #
     #     return nn.Sequential(*layers)
-    def __init__(self, num_classes=1000):
+    def __init__(self, num_classes=100):
         super(VGGnet, self).__init__()
 
         self.features = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=3, padding=1),
             nn.ReLU(),
-            nn.Conv2d(64, 64, kernel_size=3, padding=1),
-            nn.ReLU(),
+            
+
             nn.MaxPool2d(kernel_size=2, stride=2),
 
             nn.Conv2d(64, 128, kernel_size=3, padding=1),
@@ -212,24 +212,24 @@ class VGGnet(nn.Module):
             nn.ReLU(),
             nn.Conv2d(256, 256, kernel_size=3, padding=1),
             nn.ReLU(),
-            nn.Conv2d(256, 256, kernel_size=3, padding=1),
-            nn.ReLU(),
+
+
             nn.MaxPool2d(kernel_size=2, stride=2),
 
             nn.Conv2d(256, 512, kernel_size=3, padding=1),
             nn.ReLU(),
             nn.Conv2d(512, 512, kernel_size=3, padding=1),
             nn.ReLU(),
-            nn.Conv2d(512, 512, kernel_size=3, padding=1),
-            nn.ReLU(),
+
+
             nn.MaxPool2d(kernel_size=2, stride=2),
 
             nn.Conv2d(512, 512, kernel_size=3, padding=1),
             nn.ReLU(),
             nn.Conv2d(512, 512, kernel_size=3, padding=1),
             nn.ReLU(),
-            nn.Conv2d(512, 512, kernel_size=3, padding=1),
-            nn.ReLU(),
+
+
             nn.MaxPool2d(kernel_size=2, stride=2),
         )
 

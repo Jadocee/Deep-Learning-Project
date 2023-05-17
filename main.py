@@ -11,4 +11,4 @@ test.print_checks()
 
 test.begin_training(5)
 
-test.diagram()
+#test.diagram()

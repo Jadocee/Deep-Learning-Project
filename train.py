@@ -74,18 +74,18 @@ class Train():
             "data\intel_image_classification_dataset\seg_test\seg_test", transform=eval_transforms)
 
         self.train_loader = DataLoader(
-            dataset=self.train_data, batch_size=100, shuffle=True)  # TODO Update to take a set amount of batches vs arbitrary number
+            dataset=self.train_data, batch_size=50, shuffle=True)  # TODO Update to take a set amount of batches vs arbitrary number
         self.valid_loader = DataLoader(
-            dataset=self.valid_data, batch_size=100, shuffle=False)
+            dataset=self.valid_data, batch_size=50, shuffle=False)
         self.test_loader = DataLoader(
-            dataset=self.test_data, batch_size=100, shuffle=False)
+            dataset=self.test_data, batch_size=50, shuffle=False)
         # return self.train_loader, self.valid_loader, self.test_loader
 
     def begin_training(self, num_epochs):
 
         model = VGGnet()
         model = model.to(self.device)
-        optimizer = Adam(model.parameters(), lr=0.01)
+        optimizer = Adam(model.parameters(), lr=0.001)
         loss_fn = CrossEntropyLoss()
         train_losses, val_losses = [], []
         train_accs, val_accs = [], []
