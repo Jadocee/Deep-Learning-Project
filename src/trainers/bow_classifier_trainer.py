@@ -44,7 +44,6 @@ class BOWClassifierTrainer(BaseTrainer):
                 labels = batch['label']
                 # Forward pass
                 preds = model(inputs)
-                print(len(preds))
                 # Calculate loss
                 loss = loss_fn(preds, labels)
                 # Log
