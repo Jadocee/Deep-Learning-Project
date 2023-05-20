@@ -120,6 +120,7 @@ class DataProcessingUtils:
         ids = [vocab[token] for token in example['tokens']]
         return {'ids': ids}
 
+    
     def multi_hot_data(example, num_classes):
         encoded = np.zeros((num_classes,))
         encoded[example['ids']] = 1 
