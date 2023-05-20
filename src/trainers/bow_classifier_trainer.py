@@ -1,23 +1,14 @@
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional
 
-from datasets import Dataset
-from nltk.lm import Vocabulary
-from numpy import mean, ndarray
-from optuna import Trial
-from sklearn.model_selection import train_test_split
-from torch import Tensor, no_grad
-from torch import sum as t_sum
-import torch
-from torch.nn import CrossEntropyLoss
-from torch.optim import Adam
-from torch.utils.data import DataLoader
-from models.bow_model import BOWModel
 import numpy as np
-from models.lstm_model import LSTMModel
-from trainers.base_trainer import BaseTrainer
-from utils.data_processing_utils import DataProcessingUtils
-from utils.dataset_loader import DatasetLoader
+import torch
+from optuna import Trial
+from torch.nn import CrossEntropyLoss
+from torch.utils.data import DataLoader
 from torchtext.vocab import Vocab
+
+from models.bow_model import BOWModel
+from trainers.base_trainer import BaseTrainer
 
 
 class BOWClassifierTrainer(BaseTrainer):

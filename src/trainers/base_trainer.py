@@ -74,26 +74,6 @@ class BaseTrainer(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def save(self) -> None:
-        """
-        Save the model parameters.
-
-        Returns:
-            None
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def load(self) -> None:
-        """
-        Load the model parameters.
-
-        Returns:
-            None
-        """
-        raise NotImplementedError
-
-    @abstractmethod
     def run(self, model: BaseModel, epochs: int = 5, batch_size: int = 128, learning_rate: float = 0.01,
             max_tokens: int = 600) -> None:
         """

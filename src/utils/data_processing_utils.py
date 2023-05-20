@@ -1,15 +1,13 @@
 import string
-import warnings
-from collections import Counter
 from typing import List, Set, Iterable, Union
-from datasets import Dataset
 
+import numpy as np
 from contractions import fix as contractions_fix
+from datasets import Dataset
 from nltk import word_tokenize
 from nltk.corpus import stopwords
 from nltk.lm import Vocabulary
 from nltk.stem import WordNetLemmatizer, PorterStemmer
-import numpy as np
 from torchtext.vocab import build_vocab_from_iterator, Vocab
 
 
@@ -53,9 +51,9 @@ class DataProcessingUtils:
         tokens: List[str] = word_tokenize(text=text, language="english")
         # Remove stop words
         tokens = [token for token in tokens if token not in DataProcessingUtils.STOP_WORDS]
-        # Finalise
-        if lemmatise and stem:
-            raise Exception("Cannot lemmatise and stem at the same time")
+        # Normalise
+        if lemmatise == stem:
+            raise Exception("The arguments lemmatise and stem cannot be equal.")
         elif lemmatise:
             tokens = [WordNetLemmatizer().lemmatize(token) for token in tokens]
         elif stem:
@@ -85,22 +83,6 @@ class DataProcessingUtils:
         return vocab
 
     @staticmethod
-    def create_vocab_1(word_tokens: Iterable) -> Vocabulary:
-        """
-        Deprecated method for creating a vocabulary from an iterable of word tokens. Use create_vocab instead.
-
-        Args:
-            word_tokens (Iterable): An iterable of word tokens to build the vocabulary from.
-
-        Returns:
-            Vocabulary: The created vocabulary.
-        """
-        warnings.warn("This method is deprecated. Use create_vocab instead.", DeprecationWarning)
-        word_counts = Counter(word_tokens)
-        vocab: Vocabulary = Vocabulary(counts=word_counts, unk_cutoff=5)
-        return vocab
-
-    @staticmethod
     def vocabularise_text(tokens: List[str], vocab: Union[Vocab, Vocabulary]) -> List[int]:
         """
         Converts a list of tokens into their corresponding numerical identifiers using the provided vocabulary.
@@ -114,22 +96,24 @@ class DataProcessingUtils:
         """
         ids = [vocab[token] for token in tokens]
         return ids
-    
+
     @staticmethod
     def numericalize_data(example, vocab):
+        # TODO: use vocabularise_text instead
         ids = [vocab[token] for token in example['tokens']]
         return {'ids': ids}
 
-    
+    @staticmethod
     def multi_hot_data(example, num_classes):
         encoded = np.zeros((num_classes,))
-        encoded[example['ids']] = 1 
+        encoded[example['ids']] = 1
         return {'multi_hot': encoded}
 
     @staticmethod
-    def create_vocab_2(train_data:Dataset, valid_Data:Dataset, test_data: Dataset) -> Vocab:
+    def create_vocab_2(train_data: Dataset, valid_Data: Dataset, test_data: Dataset) -> Vocab:
+        # TODO: use create_vocab instead
         vocab = build_vocab_from_iterator(train_data['tokens'],
-                                                    min_freq=5,
-                                                    specials=['<unk>', '<pad>'])
+                                          min_freq=5,
+                                          specials=['<unk>', '<pad>'])
         vocab.set_default_index(vocab['<unk>'])
         return vocab

@@ -1,24 +1,19 @@
-from itertools import chain
-from typing import Tuple, Union, Dict, List, Optional, Any
+from typing import Tuple, Union
 
 from nltk.lm import Vocabulary
 from optuna import Trial
-from torch import Tensor, stack
-from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader
 from torchtext.vocab import Vocab
-from models.bow_model import BOWModel
 
-from models.lstm_model import LSTMModel
+from models.bow_model import BOWModel
 from optimisers.base_optimiser import BaseOptimiser
 from trainers.bow_classifier_trainer import BOWClassifierTrainer
-from trainers.lstm_classifier_trainer import LSTMClassifierTrainer
 from utils.data_processing_utils import DataProcessingUtils
 from utils.dataset_loader import DatasetLoader
 
 
 def prepare_data(batch_size: int, max_tokens: int) \
-    -> Tuple[DataLoader, DataLoader, DataLoader, Union[Vocab, Vocabulary]]:
+        -> Tuple[DataLoader, DataLoader, DataLoader, Union[Vocab, Vocabulary]]:
     # TODO: Move to utility class
     # TODO: Make this reusable for other datasets
 
@@ -32,13 +27,12 @@ def prepare_data(batch_size: int, max_tokens: int) \
         lambda x: {"tokens": DataProcessingUtils.standardise_text(text=x["text"], max_tokens=max_tokens)})
 
     # # Create the vocabulary
-    vocab: Vocabulary = DataProcessingUtils.create_vocab_2(train_data,valid_data,test_data)
-    
+    vocab: Vocabulary = DataProcessingUtils.create_vocab_2(train_data, valid_data, test_data)
+
     # Numericalize the data
     train_data = train_data.map(DataProcessingUtils.numericalize_data, fn_kwargs={'vocab': vocab})
     valid_data = valid_data.map(DataProcessingUtils.numericalize_data, fn_kwargs={'vocab': vocab})
     test_data = test_data.map(DataProcessingUtils.numericalize_data, fn_kwargs={'vocab': vocab})
-
 
     train_data = train_data.map(DataProcessingUtils.multi_hot_data, fn_kwargs={'num_classes': len(vocab)})
     valid_data = valid_data.map(DataProcessingUtils.multi_hot_data, fn_kwargs={'num_classes': len(vocab)})

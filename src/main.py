@@ -1,14 +1,15 @@
-from os import system, name, mkdir
+from os import system, name
 from os.path import exists
+from pathlib import Path
 from typing import Dict
 
 from nltk.downloader import download
 from torch.cuda import is_available as has_cuda
-from optimisers.bow_classifier_optimiser import BOWClassifierOptimiser
 
+from optimisers.bow_classifier_optimiser import BOWClassifierOptimiser
 from optimisers.lstm_classifier_optimiser import LSTMClassifierOptimiser
-from trainers.bow_classifier_trainer import BOWClassifierTrainer
 from utils.definitions import MODELS_DIR, STUDIES_DIR
+from trainers.cnn_trainer import menu_prompt
 
 
 class Main:
@@ -31,18 +32,13 @@ class Main:
             4: "Check CUDA Availability",
         },
         "Image Classifier Menu": {
-            1: "TODO",
+            1: "Resnet Model",
         },
-        "Tweet Classifier Menu": {
-            1: "LSTM Trainer",
-            2: "BOW Trainer"
-        },
+        "Tweet Classifier Menu": {1: "LSTM Trainer", 2: "BOW Trainer"},
         "LSTM Trainer Menu": {
             1: "Optimise Hyperparameters",
         },
-        "BOW Trainer Menu":{
-            1: "Run Bag Of Words 1"
-        }
+        "BOW Trainer Menu": {1: "Run Bag Of Words 1"},
     }
     """
     A dictionary containing the structure of the menus to be displayed on the command-line interface.
@@ -64,7 +60,6 @@ class Main:
 
         Args:
             menu_name (str): The name of the menu to be displayed.
-
         Raises:
             Exception: If the provided menu_name does not exist in the MENUS dictionary.
         """
@@ -107,11 +102,21 @@ class Main:
                     download("punkt")
                     download("wordnet")
                 elif choice == 4:
+                    print(f"CUDA is {'available' if has_cuda() else 'not available'}")
                     input("Press any key to continue...")
                     system("cls" if name == "nt" else "clear")
                 else:
                     print("Invalid choice. Try again.")
                     system("cls" if name == "nt" else "clear")
+            elif current_menu == "Image Classifier Menu":
+                if choice == 0:
+                    current_menu = "Main Menu"
+                elif choice == 1:
+                    system("cls" if name == "nt" else "clear")
+                    menu_prompt("resnet18", 50, 50, 0.001)
+                    # TODO modify to ask users for hyper params
+                else:
+                    print("Invalid choice. Try again.")
             elif current_menu == "Tweet Classifier Menu":
                 if choice == 0:
                     current_menu = "Main Menu"
@@ -127,18 +132,32 @@ class Main:
                     current_menu = "Main Menu"
                 elif choice == 1:
                     system("cls" if name == "nt" else "clear")
-                    study_name: str = input("Enter study name or press enter to use default: ")
+
+                    study_name: str = input(
+                        "Enter study name or press enter to use default: "
+                    )
+                    optimiser: LSTMClassifierOptimiser = LSTMClassifierOptimiser(
+                        device=Main.DEVICE
+                    )
+                    optimiser.run(
+                        study_name=study_name if study_name != "" else None, prune=True
+                    )
+            study_name: str = input("Enter study name or press enter to use default: ")
                     optimiser: LSTMClassifierOptimiser = LSTMClassifierOptimiser(device=Main.DEVICE)
-                    optimiser.run(study_name=study_name if study_name != "" else None, prune=True)
+                    optimiser.run(study_name=study_name if study_name != "" else None, prune=True, n_trials=200,
+                                  n_warmup_steps=5, visualisations=["param_importances", "optimisation_history"])
+
                 else:
                     print("Invalid choice. Try again.")
                     system("cls" if name == "nt" else "clear")
             elif current_menu == "BOW Trainer Menu":
                 if choice == 0:
-                        current_menu = "Main Menu"
+                    current_menu = "Main Menu"
                 elif choice == 1:
                     print({"BagOfWords"})
-                    optimiser: BOWClassifierOptimiser = BOWClassifierOptimiser(device=Main.DEVICE)
+                    optimiser: BOWClassifierOptimiser = BOWClassifierOptimiser(
+                        device=Main.DEVICE
+                    )
                     optimiser.run(None, prune=True)
             elif current_menu == "Image Classifier Menu":
                 if choice == 0:
@@ -159,10 +178,12 @@ class Main:
         """
         if not exists(STUDIES_DIR):
             print(f"Creating directory: {STUDIES_DIR}")
-            mkdir(STUDIES_DIR)
+            path: Path = Path(STUDIES_DIR)
+            path.mkdir(parents=True, exist_ok=True)
         if not exists(MODELS_DIR):
             print(f"Creating directory: {MODELS_DIR}")
-            mkdir(MODELS_DIR)
+            path: Path = Path(MODELS_DIR)
+            path.mkdir(parents=True, exist_ok=True)
 
     @staticmethod
     def main() -> None:

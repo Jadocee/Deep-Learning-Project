@@ -41,13 +41,7 @@ def prepare_data(batch_size: int, max_tokens: int) \
     test_data = test_data.map(
         lambda x: {"tokens": DataProcessingUtils.standardise_text(text=x["text"], max_tokens=max_tokens)})
 
-    # Flatten the data
-    # flat_train = [token for tokens in train_data["tokens"] for token in tokens]
-    # flat_valid = [token for tokens in valid_data["tokens"] for token in tokens]
-    # flat_test = [token for tokens in test_data["tokens"] for token in tokens]
-
     # Create the vocabulary
-    # vocab: Vocab = DataProcessingUtils.create_vocab(chain(flat_train, flat_valid, flat_test))
     vocab: Vocab = DataProcessingUtils.create_vocab(
         chain(train_data["tokens"], valid_data["tokens"], test_data["tokens"]))
 
@@ -104,10 +98,7 @@ class LSTMClassifierOptimiser(BaseOptimiser):
         Returns:
             float: The accuracy of the model on the validation set.
         """
-        # TODO: Set the seed for reproducibility
-
         # Suggestions for hyperparameters
-
         epochs: int = trial.suggest_categorical("epochs", [3, 5, 10, 20, 50])
         n_layers: int = trial.suggest_int("n_layers", 1, 5)
         bidirectional: bool = trial.suggest_categorical("bidirectional", [True, False])
@@ -121,7 +112,6 @@ class LSTMClassifierOptimiser(BaseOptimiser):
         lr_scheduler_name: Optional[str] = trial.suggest_categorical("lr_scheduler",
                                                                      ["StepLR", "ExponentialLR", "MultiStepLR", None,
                                                                       "ReduceLROnPlateau", "CosineAnnealingLR"])
-
         # Suggest hyperparameters for the learning rate scheduler based on the chosen learning rate scheduler
         kwargs: Dict[str, Any] = dict()
         if lr_scheduler_name == "StepLR":
@@ -155,7 +145,6 @@ class LSTMClassifierOptimiser(BaseOptimiser):
         # Load and preprocess the data
         train_dataloader, valid_dataloader, test_dataloader, vocab = prepare_data(batch_size=batch_size,
                                                                                   max_tokens=max_tokens)
-
         # Create the model
         model: LSTMModel = LSTMModel(
             vocab_size=len(vocab),

@@ -101,7 +101,6 @@ class LSTMClassifierTrainer(BaseTrainer):
                 output: Tensor = model.forward(x)
                 loss: Tensor = loss_fn(output, y)
                 losses.append(loss.detach().cpu().numpy())
-                # accuracy: Tensor = t_sum((y_pred.argmax(dim=1) == y)) / y.shape[0]
                 y_pred: Tensor = output.argmax(dim=1)
                 accuracy: Tensor = t_sum((y_pred == y)) / y.shape[0]
                 accuracies.append(accuracy.detach().cpu().numpy())
@@ -119,12 +118,6 @@ class LSTMClassifierTrainer(BaseTrainer):
         loss_fn: CrossEntropyLoss = CrossEntropyLoss()
         test_loss, test_acc = self.evaluate(model=model, dataloader=self._test_dataloader, loss_fn=loss_fn)
         print(f"Test Loss: {test_loss:.3f}, Test Accuracy: {test_acc * 100:.2f}%")
-
-    def save(self):
-        raise NotImplementedError
-
-    def load(self):
-        raise NotImplementedError
 
     def run(self,
             model: LSTMModel,
@@ -197,9 +190,6 @@ class LSTMClassifierTrainer(BaseTrainer):
                                        "Train Accuracy": f"{train_acc * 100:.2f}%", "Valid Loss": f"{valid_loss:.3f}",
                                        "Valid Accuracy": f"{valid_acc * 100:.2f}%"}, index=[0])
             print(df.to_string(index=False, header=(epoch == 0), justify="center", col_space=15))
-
-            # print(f"Epoch: {epoch + 1:02}, Train Loss: {train_loss:.3f}, Train Accuracy: {train_acc * 100:.2f}%, "
-            #       f"Valid Loss: {valid_loss:.3f}, Valid Accuracy: {valid_acc * 100:.2f}%")
 
             if scheduler:
                 scheduler.step(valid_loss) if isinstance(scheduler, ReduceLROnPlateau) else scheduler.step()

@@ -1,5 +1,6 @@
 import torch.nn as nn
 
+
 class BOWModel(nn.Module):
     def __init__(self, vocab_size):
         super().__init__()

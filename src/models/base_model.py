@@ -1,6 +1,10 @@
 from abc import ABC, abstractmethod
+from os.path import join
 
+import torch
 from torch.nn import ModuleList
+
+from utils.definitions import MODELS_DIR
 
 
 class BaseModel(ABC):
@@ -36,6 +40,12 @@ class BaseModel(ABC):
             Parameter: The parameters of the model.
         """
         return self._modules.parameters()
+
+    def save(self, model_name: str):
+        torch.save(self._modules.state_dict(), join(MODELS_DIR, f"{model_name}.pt"))
+
+    def load(self, model_name: str):
+        self._modules.load_state_dict(torch.load(join(MODELS_DIR, f"{model_name}.pt")))
 
     def train(self, mode=True):
         """
