@@ -142,7 +142,7 @@ class Main:
                     optimiser.run(
                         study_name=study_name if study_name != "" else None, prune=True
                     )
-            study_name: str = input("Enter study name or press enter to use default: ")
+                    study_name: str = input("Enter study name or press enter to use default: ")
                     optimiser: LSTMClassifierOptimiser = LSTMClassifierOptimiser(device=Main.DEVICE)
                     optimiser.run(study_name=study_name if study_name != "" else None, prune=True, n_trials=200,
                                   n_warmup_steps=5, visualisations=["param_importances", "optimisation_history"])
@@ -154,11 +154,15 @@ class Main:
                 if choice == 0:
                     current_menu = "Main Menu"
                 elif choice == 1:
-                    print({"BagOfWords"})
+                    study_name: str = input(
+                        "Enter study name or press enter to use default: "
+                    )
                     optimiser: BOWClassifierOptimiser = BOWClassifierOptimiser(
                         device=Main.DEVICE
                     )
-                    optimiser.run(None, prune=True)
+                    optimiser.run(
+                        study_name=study_name if study_name != "" else None, prune=True,n_trials=10,
+                         n_warmup_steps=5, visualisations=["param_importances", "optimisation_history"])
             elif current_menu == "Image Classifier Menu":
                 if choice == 0:
                     current_menu = "Main Menu"

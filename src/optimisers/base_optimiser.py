@@ -135,6 +135,7 @@ class BaseOptimiser(ABC):
 
             # Save the results to a CSV file
             df: DataFrame = study.trials_dataframe()
+            tria
             out_csv: str = join(output_dir, "results.csv")
             df.to_csv(out_csv, index=False)
             print(f"Saved results to {out_csv}")

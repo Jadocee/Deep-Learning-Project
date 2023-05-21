@@ -1,15 +1,20 @@
+from torch import Tensor
 import torch.nn as nn
+from models.base_model import BaseModel
 
 
-class BOWModel(nn.Module):
-    def __init__(self, vocab_size):
+class BOWModel(BaseModel):
+    
+    def __init__(self, vocab_size: int,output_size):
         super().__init__()
-        self.hidden = nn.Linear(vocab_size, 12)
-        self.hidden2 = nn.Linear(12, 16)
-        self.out = nn.Linear(16, 6)
-
-    def forward(self, x):
-        x = nn.ReLU()(self.hidden(x))
-        x = nn.ReLU()(self.hidden2(x))
-        x = self.out(x)
+        self._modules.append(nn.Linear(vocab_size, 12))
+        self._modules.append(nn.ReLU())
+        self._modules.append(nn.Linear(12, 16))
+        self._modules.append(nn.ReLU())
+        self._modules.append(nn.Linear(16,output_size))
+        self._modules.to(self._device)
+    def forward(self, x: Tensor) -> Tensor:
+        for module in self._modules:
+            x = module(x)
         return x
+    

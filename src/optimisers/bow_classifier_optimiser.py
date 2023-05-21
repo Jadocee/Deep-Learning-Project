@@ -27,7 +27,7 @@ def prepare_data(batch_size: int, max_tokens: int) \
         lambda x: {"tokens": DataProcessingUtils.standardise_text(text=x["text"], max_tokens=max_tokens)})
 
     # # Create the vocabulary
-    vocab: Vocabulary = DataProcessingUtils.create_vocab_2(train_data, valid_data, test_data)
+    vocab: Vocabulary = DataProcessingUtils.create_vocab(train_data, valid_data)
 
     # Numericalize the data
     train_data = train_data.map(DataProcessingUtils.numericalize_data, fn_kwargs={'vocab': vocab})
@@ -60,8 +60,8 @@ class BOWClassifierOptimiser(BaseOptimiser):
 
         # Suggestions for hyperparameters
 
-        epochs: int = trial.suggest_categorical("epochs", [5, 10, 20])
-        learning_rate: float = trial.suggest_float("learning_rate", 1e-6, 1e-1, log=True)
+        epochs: int = trial.suggest_categorical("epochs", [5, 10, 20, 50,100])
+        learning_rate: float = trial.suggest_float("learning_rate", 1e-4, 1e-1, log=True)
         batch_size: int = trial.suggest_categorical("batch_size", [8, 32, 64, 128, 256])
         max_tokens: int = trial.suggest_categorical("max_tokens", [100, 200, 300, 400, 500, 600])
         optimiser_name: str = trial.suggest_categorical("optimiser", ["Adam", "RMSprop", "SGD", "Adagrad"])
@@ -108,13 +108,7 @@ class BOWClassifierOptimiser(BaseOptimiser):
         # Create the model
         model: BOWModel = BOWModel(
             vocab_size=len(vocab),
-            # embedding_dim=embedding_dim,
-            # hidden_size=hidden_size,
-            # n_layers=n_layers,
-            # bidirectional=bidirectional,
-            # pad_idx=vocab["<pad>"],
-            # output_size=6,
-            # dropout=dropout,
+            output_size=6,
         )
 
         # Create the trainer
@@ -131,9 +125,6 @@ class BOWClassifierOptimiser(BaseOptimiser):
             model=model,
             learning_rate=learning_rate,
             epochs=epochs,
-            batch_size=batch_size,
-            max_tokens=max_tokens,
-            trial=trial,
             optimiser_name=optimiser_name,
             # lr_scheduler_name=lr_scheduler_name,
             # kwargs=kwargs
