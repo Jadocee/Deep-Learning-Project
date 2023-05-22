@@ -1,6 +1,5 @@
 from unittest import TestCase
 
-import optuna
 from optuna import Trial, create_study
 
 from optimisers.lstm_classifier_optimiser import prepare_data
@@ -20,5 +19,3 @@ class TestLSTMClassifierOptimiser(TestCase):
         # Load and preprocess the data
         train_dataloader, valid_dataloader, test_dataloader, vocab = prepare_data(batch_size=batch_size,
                                                                                   max_tokens=max_tokens)
-
-

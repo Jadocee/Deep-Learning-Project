@@ -1,4 +1,3 @@
-from os import mkdir
 from os.path import join
 from pathlib import Path
 from unittest import TestCase

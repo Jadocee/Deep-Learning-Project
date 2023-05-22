@@ -18,7 +18,8 @@ from torch.utils.data import Dataset
 from torchvision.transforms import Compose
 
 
-class CustomDataset(Dataset):
+# TODO: move file
+class Dataset(Dataset):  # TODO: Redeclared 'Dataset' defined above without usage; Rename the element.
     """
     Custom dataset class for loading images and labels from a directory.
 
@@ -38,75 +39,58 @@ class CustomDataset(Dataset):
     """
 
     def __init__(self, data_dir: str, transform: Optional[Compose] = None):
-        """
-        Initializes the object of the class.
-
-        Args:
-            data_dir (str): The directory path containing the image data.
-            transform (Optional[Compose], optional): A transformation to be applied to the images (default: None).
-
-        Attributes:
-            image_paths (list): A list of paths to image files.
-            labels (ndarray or None): An array of labels corresponding to the images, or None if no labels file found.
-            transform: A transformation to be applied to the images.
-            n (int): The number of images in the dataset.
-
-        Raises:
-            None
-
-        Returns:
-            None
-        """
-        if os.path.exists(os.path.join(data_dir, "buildings")):
-            folders = ["buildings", "forest", "glacier", "mountain", "sea", "street"]
+        # TODO: add docstring; I moved the docstring that was originally here to the class docstring
+        #  (assuming that it was intended to be there).
+        if os.path.exists(os.path.join(data_dir + "\\buildings")):
+            folders = ['buildings', 'forest',
+                       'glacier', 'mountain', 'sea', 'street']
             self.image_paths = []
             for folder in folders:
-                updated_dir = os.path.join(data_dir + f"\\{folder}")
-                self.image_paths += glob.glob(os.path.join(updated_dir, "*.jpg"))
+                updated_dir = os.path.join(data_dir + f'\\{folder}')
+                self.image_paths += glob.glob(
+                    os.path.join(updated_dir, '*.jpg'))
         else:
-            self.image_paths = glob.glob(os.path.join(data_dir, "*.jpg"))
+            self.image_paths = glob.glob(
+                os.path.join(data_dir, '*.jpg'))
 
-        labels_path = os.path.join(data_dir, "preds.csv")
-        self.labels = (
-            pd.read_csv(labels_path, header=None).to_numpy()[:, 1][1:].astype(int)
-            if os.path.isfile(labels_path)
-            else None
-        )
         self.image_paths.sort()
+        labels_path = os.path.join(data_dir, "labels.csv")
+        self.labels = pd.read_csv(labels_path, header=None).to_numpy()[
+                      :, 1] if os.path.isfile(labels_path) else None
         self.transform = transform
         self.n = len(self.image_paths)
 
     def __len__(self):
-        """Returns the number of samples in the dataset.
+        """ Returns the number of samples in the dataset.
 
-        Returns:
-            int: Number of samples in the dataset.
+            Returns:
+                int: Number of samples in the dataset.
         """
         return self.n
 
     def __getitem__(self, idx):
-        """Retrieves the image and its corresponding label at the given index.
+        """ Retrieves the image and its corresponding label at the given index.
 
-        Args:
-            idx (int): Index of the sample to retrieve.
+            Args:
+                idx (int): Index of the sample to retrieve.
 
-        Returns:
-            tuple: Tuple containing the transformed image and its label.
+            Returns:
+                tuple: Tuple containing the transformed image and its label.
         """
         img_path = self.image_paths[idx]
         img = Image.open(img_path)
         img_transformed = self.transform(img)
 
         if self.labels is None:
-            if img_path.split("\\")[-2] == "buildings":
+            if img_path.split('\\')[-2] == 'buildings':
                 label = 0
-            elif img_path.split("\\")[-2] == "forest":
+            elif img_path.split('\\')[-2] == 'forest':
                 label = 1
-            elif img_path.split("\\")[-2] == "glacier":
+            elif img_path.split('\\')[-2] == 'glacier':
                 label = 2
-            elif img_path.split("\\")[-2] == "mountain":
+            elif img_path.split('\\')[-2] == 'mountain':
                 label = 3
-            elif img_path.split("\\")[-2] == "sea":
+            elif img_path.split('\\')[-2] == 'sea':
                 label = 4
             else:
                 label = 5

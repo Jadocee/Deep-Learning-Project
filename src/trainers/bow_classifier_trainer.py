@@ -26,7 +26,7 @@ class BOWClassifierTrainer(BaseTrainer):
         self.__vocab = vocab
         self.__pad_index = vocab["<pad>"]
 
-    def evaluate(self, model: BOWModel, dataloader, loss_fn):
+    def _evaluate(self, model: BOWModel, dataloader, loss_fn):
         model.eval()
         losses, accuracies = [], []
         with torch.no_grad():
@@ -44,14 +44,14 @@ class BOWClassifierTrainer(BaseTrainer):
             accuracies.append(accuracy.detach().cpu().numpy())
         return np.mean(losses), np.mean(accuracies)
 
-    def train(self, model: BOWModel, dataloader, loss_fn, optimizer):
+    def _train(self, model: BOWModel, dataloader, loss_fn, optimiser):
         model.train()
         losses, accuracies = [], []
         for batch in dataloader:
             inputs = batch['multi_hot']
             labels = batch['label']
             # Reset the gradients for all variables
-            optimizer.zero_grad()
+            optimiser.zero_grad()
             # Forward pass
             preds = model(inputs)
             # Calculate loss
@@ -59,14 +59,14 @@ class BOWClassifierTrainer(BaseTrainer):
             # Backward pass
             loss.backward()
             # Adjust weights
-            optimizer.step()
+            optimiser.step()
             # Log
             losses.append(loss.detach().cpu().numpy())
             accuracy = torch.sum(torch.argmax(preds, dim=-1) == labels) / labels.shape[0]
             accuracies.append(accuracy.detach().cpu().numpy())
         return np.mean(losses), np.mean(accuracies)
 
-    def run(self,
+    def fit(self,
             model: BOWModel,
             epochs: int = 5,
             batch_size: int = 128,
@@ -85,9 +85,9 @@ class BOWClassifierTrainer(BaseTrainer):
         valid_losses, valid_accuracies = [], []
         for epoch in range(10):
             # Train
-            train_loss, train_accuracy = self.train(model, self._train_dataloader, loss_fn, optimizer)
+            train_loss, train_accuracy = self._train(model, self._train_dataloader, loss_fn, optimizer)
             # Evaluate
-            valid_loss, valid_accuracy = self.evaluate(model, self._valid_dataloader, loss_fn)
+            valid_loss, valid_accuracy = self._evaluate(model, self._valid_dataloader, loss_fn)
             # Log
             train_losses.append(train_loss)
             train_accuracies.append(train_accuracy)

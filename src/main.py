@@ -8,8 +8,8 @@ from torch.cuda import is_available as has_cuda
 
 from optimisers.bow_classifier_optimiser import BOWClassifierOptimiser
 from optimisers.lstm_classifier_optimiser import LSTMClassifierOptimiser
-from utils.definitions import MODELS_DIR, STUDIES_DIR
 from trainers.cnn_trainer import menu_prompt
+from utils.definitions import MODELS_DIR, STUDIES_DIR
 
 
 class Main:
@@ -143,57 +143,61 @@ class Main:
                         study_name=study_name if study_name != "" else None, prune=True
                     )
             study_name: str = input("Enter study name or press enter to use default: ")
-                    optimiser: LSTMClassifierOptimiser = LSTMClassifierOptimiser(device=Main.DEVICE)
-                    optimiser.run(study_name=study_name if study_name != "" else None, prune=True, n_trials=200,
-                                  n_warmup_steps=5, visualisations=["param_importances", "optimisation_history"])
+            optimiser: LSTMClassifierOptimiser = LSTMClassifierOptimiser(device=Main.DEVICE)
+            optimiser.run(study_name=study_name if study_name != "" else None, prune=True, n_trials=200,
+                          n_warmup_steps=5, visualisations=["param_importances", "optimisation_history"])
 
-                else:
-                    print("Invalid choice. Try again.")
-                    system("cls" if name == "nt" else "clear")
-            elif current_menu == "BOW Trainer Menu":
-                if choice == 0:
-                    current_menu = "Main Menu"
-                elif choice == 1:
-                    print({"BagOfWords"})
-                    optimiser: BOWClassifierOptimiser = BOWClassifierOptimiser(
-                        device=Main.DEVICE
-                    )
-                    optimiser.run(None, prune=True)
-            elif current_menu == "Image Classifier Menu":
-                if choice == 0:
-                    current_menu = "Main Menu"
-                else:
-                    print("Invalid choice. Try again.")
-                    system("cls" if name == "nt" else "clear")
+        else:
+            print("Invalid choice. Try again.")
+            system("cls" if name == "nt" else "clear")
+        elif current_menu == "BOW Trainer Menu":
+        if choice == 0:
+            current_menu = "Main Menu"
+        elif choice == 1:
+            print({"BagOfWords"})
+            optimiser: BOWClassifierOptimiser = BOWClassifierOptimiser(
+                device=Main.DEVICE
+            )
+            optimiser.run(None, prune=True)
 
-            print("\n")
+    elif current_menu == "Image Classifier Menu":
+    if choice == 0:
+        current_menu = "Main Menu"
+    else:
+        print("Invalid choice. Try again.")
+        system("cls" if name == "nt" else "clear")
 
-    @staticmethod
-    def __initial_setup() -> None:
-        """
-        Performs the initial setup for the application.
 
-        The method checks for the existence of certain directories and creates them if they do not exist.
-        The directories checked are those defined in the definitions file.
-        """
-        if not exists(STUDIES_DIR):
-            print(f"Creating directory: {STUDIES_DIR}")
-            path: Path = Path(STUDIES_DIR)
-            path.mkdir(parents=True, exist_ok=True)
-        if not exists(MODELS_DIR):
-            print(f"Creating directory: {MODELS_DIR}")
-            path: Path = Path(MODELS_DIR)
-            path.mkdir(parents=True, exist_ok=True)
+print("\n")
 
-    @staticmethod
-    def main() -> None:
-        """
-        The main entry point for the application.
 
-        This method performs the initial setup and then launches the command-line interface.
-        """
-        Main.__initial_setup()
-        Main.__switch_menu()
+@staticmethod
+def __initial_setup() -> None:
+    """
+    Performs the initial setup for the application.
+
+    The method checks for the existence of certain directories and creates them if they do not exist.
+    The directories checked are those defined in the definitions file.
+    """
+    if not exists(STUDIES_DIR):
+        print(f"Creating directory: {STUDIES_DIR}")
+        path: Path = Path(STUDIES_DIR)
+        path.mkdir(parents=True, exist_ok=True)
+    if not exists(MODELS_DIR):
+        print(f"Creating directory: {MODELS_DIR}")
+        path: Path = Path(MODELS_DIR)
+        path.mkdir(parents=True, exist_ok=True)
+
+
+@staticmethod
+def main() -> None:
+    """
+    The main entry point for the application.
+
+    This method performs the initial setup and then launches the command-line interface.
+    """
+    Main.__initial_setup()
+    Main.__switch_menu()
 
 
 if __name__ == "__main__":

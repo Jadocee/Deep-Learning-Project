@@ -1,6 +1,10 @@
+from typing import Dict
 from unittest import TestCase
 
 from datasets import load_dataset_builder, load_dataset
+
+from dataset import Dataset as CustomDataset
+from utils.dataset_loader import DatasetLoader
 
 
 class TestDatasetLoader(TestCase):
@@ -21,3 +25,7 @@ class TestDatasetLoader(TestCase):
         # print(train_data)
         # print(valid_data)
         # print(test_data)
+
+    def test_get_intel_image_classification_dataset(self):
+        datasets: Dict[str, CustomDataset] = DatasetLoader.get_intel_image_classification_dataset()
+        print(datasets)
