@@ -4,6 +4,7 @@ from datasets import DatasetDict
 from evaluate import EvaluationModule
 from optuna import Trial
 from torch import no_grad, argmax
+import torch
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
@@ -26,7 +27,7 @@ class PretrainedOptimiser(BaseOptimiser):
         dataset_dict: DatasetDict = DatasetLoader.get_tweet_topic_single_dataset()
         tokenizer = AutoTokenizer.from_pretrained(self.__pretrained_model_name)
         dataset_dict = dataset_dict.map(
-            lambda x: tokenizer(x["text"], padding="max_length", truncation=True),
+            lambda x: tokenizer(x["text"], padding="max_length", truncation=True, max_length=max_tokens),
             batched=True,
             remove_columns=["text"]
         )
@@ -39,8 +40,8 @@ class PretrainedOptimiser(BaseOptimiser):
         return train_dataloader, valid_dataloader, test_dataloader
 
     def _objective(self, trial: Trial) -> float:
-
-        batch_size: int = trial.suggest_categorical("batch_size", [8, 16, 32, 64])
+        torch.cuda.empty_cache()
+        batch_size: int = trial.suggest_categorical("batch_size", [8])
         epochs: int = trial.suggest_categorical("epochs", [3, 5, 10])
         lr: float = trial.suggest_float("lr", 1e-6, 1e-1, log=True)
         optimiser_name: str = trial.suggest_categorical("optimiser", ["AdamW", "Adam"])
@@ -49,7 +50,7 @@ class PretrainedOptimiser(BaseOptimiser):
                                                                  'inverse_sqrt', 'reduce_lr_on_plateau'])
 
         train_dataloader, valid_dataloader, test_dataloader = self._prepare_data(batch_size=batch_size,
-                                                                                 max_tokens=600)
+                                                                                 max_tokens=200)
 
         model = AutoModelForSequenceClassification.from_pretrained(self.__pretrained_model_name, num_labels=6)
         optimiser: Optimizer = HyperParamUtils.define_optimiser(optimiser_name=optimiser_name,
@@ -75,8 +76,7 @@ class PretrainedOptimiser(BaseOptimiser):
                 progress_bar.update(1)
                 predictions = argmax(outputs.logits, dim=-1)
                 training_metric.add_batch(predictions=predictions, references=batch["labels"])
-                progress_bar.set_description(
-                    f"Epoch: {epoch + 1}/{epochs}, Loss: {loss.item():.4f}, Accuracy: {training_metric.compute():.4f}")
+
 
         metric = evaluate.load("accuracy")
         model.eval()
