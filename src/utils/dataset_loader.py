@@ -80,7 +80,6 @@ class DatasetLoader:
             ToTensor()
         ])
 
-        # TODO: rename custom dataset
         train_dataset: CustomDataset = CustomDataset(data_dir=join(dataset_path, "seg_train", "seg_train"),
                                                      transform=train_transforms)
         valid_dataset: CustomDataset = CustomDataset(data_dir=join(dataset_path, "seg_test", "seg_test"),
