@@ -123,12 +123,6 @@ class LSTMClassifierOptimiser(BaseOptimiser):
 
         self._logger.info(f"Selected hyperparameters: {trial.params.__str__()}")
 
-        # TODO: Store the trainer as an attribute of the optimiser
-        #   - Trainer and dataloaders can be reused for each trial
-        #   - Easier transition to evaluating the model on the test set
-        #   - The batch size for the dataloaders can be changed for each trial
-        #   - Data only needs to be loaded and preprocessed once
-
         train_dataloader, valid_dataloader, test_dataloader = self._prepare_data(batch_size=batch_size, max_tokens=1000)
         model: LSTMModel = LSTMModel(
             vocab_size=len(self.__vocab),
@@ -158,6 +152,7 @@ class LSTMClassifierOptimiser(BaseOptimiser):
             lr_scheduler_params=scheduler_hyperparams
         )
         save_path: str = join(STUDIES_DIR, trial.study.study_name, f"trial_{trial.number}_{model.get_id()}")
+        trial.set_user_attr(key="save_path", value=save_path)
         ResultsUtils.plot_loss_and_accuracy_curves(
             training_losses=results["train_losses"],
             validation_losses=results["valid_losses"],

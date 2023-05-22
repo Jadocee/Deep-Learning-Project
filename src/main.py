@@ -161,7 +161,7 @@ class Main:
                 elif choice == 1:
                     system("cls" if name == "nt" else "clear")
                     optimiser: LSTMClassifierOptimiser = LSTMClassifierOptimiser(device=Main.DEVICE)
-                    optimiser.run()
+                    optimiser.run(n_trials=120)
                 else:
                     print("Invalid choice. Try again.")
                     system("cls" if name == "nt" else "clear")
