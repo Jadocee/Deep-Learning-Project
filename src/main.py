@@ -7,6 +7,7 @@ from torch.cuda import is_available as has_cuda, empty_cache
 
 from optimisers.bow_classifier_optimiser import BOWClassifierOptimiser
 from optimisers.lstm_classifier_optimiser import LSTMClassifierOptimiser
+from optimisers.pretrained_optimiser import PretrainedOptimiser
 from trainers.cnn_trainer import menu_prompt
 from utils.definitions import MODELS_DIR, STUDIES_DIR
 
@@ -45,12 +46,16 @@ class Main:
         "Tweet Classifier Menu": [
             "LSTM Trainer",
             "BOW Trainer",
+            "Fine-Tune Pre-Trained Model",
         ],
         "LSTM Trainer Menu": [
             "Optimise Hyperparameters",
         ],
         "BOW Trainer Menu": [
             "Run Bag Of Words 1",
+        ],
+        "Fine-Tune Pre-Trained Model Menu": [
+            "cardiffnlp/twitter-roberta-base-dec2021-tweet-topic-single-all",
         ]
     }
 
@@ -96,6 +101,7 @@ class Main:
             print("0. Main Menu")
         print("-1. Exit", end="\n\n")
 
+
     @staticmethod
     def __switch_menu():
         """
@@ -133,6 +139,8 @@ class Main:
                     Main.__clear_cuda_cache()
                     input("Press any key to continue...")
                     system("cls" if name == "nt" else "clear")
+                elif choice == 5:
+                    current_menu = "Fine-Tune Pre-Trained Model"
                 else:
                     print("Invalid choice. Try again.")
                     system("cls" if name == "nt" else "clear")
@@ -152,6 +160,8 @@ class Main:
                     current_menu = "LSTM Trainer Menu"
                 elif choice == 2:
                     current_menu = "BOW Trainer Menu"
+                elif choice == 3:
+                    current_menu = "Fine-Tune Pre-Trained Model Menu"
                 else:
                     print("Invalid choice. Try again.")
                     system("cls" if name == "nt" else "clear")
@@ -171,10 +181,19 @@ class Main:
                 elif choice == 1:
                     print({"BagOfWords"})
                     optimiser: BOWClassifierOptimiser = BOWClassifierOptimiser(device=Main.DEVICE)
-                    optimiser.run(None, prune=True)
+                    optimiser.run(2)
             elif current_menu == "Image Classifier Menu":
                 if choice == 0:
                     current_menu = "Main Menu"
+                else:
+                    print("Invalid choice. Try again.")
+                    system("cls" if name == "nt" else "clear")
+            elif current_menu == "Fine-Tune Pre-Trained Model Menu":
+                if choice == 0:
+                    current_menu = "Tweet Classifier Menu"
+                elif choice == 1:
+                    PretrainedOptimiser(model_name="cardiffnlp/twitter-roberta-base-dec2021-tweet-topic-single-all",
+                                        device=Main.DEVICE).run(2)
                 else:
                     print("Invalid choice. Try again.")
                     system("cls" if name == "nt" else "clear")

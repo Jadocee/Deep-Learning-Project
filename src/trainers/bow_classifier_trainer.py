@@ -22,7 +22,7 @@ class BOWClassifierTrainer(BaseTrainer):
     def __init__(self, train_dataloader: DataLoader, valid_dataloader: DataLoader, test_dataloader: DataLoader,
                  vocab: Vocab, device: str = "cpu") -> None:
         super().__init__(device=device, train_dataloader=train_dataloader, valid_dataloader=valid_dataloader,
-                         test_dataloader=test_dataloader)
+                         test_dataloader=test_dataloader, loss_fn=CrossEntropyLoss())
         self.__vocab = vocab
         self.__pad_index = vocab["<pad>"]
 
