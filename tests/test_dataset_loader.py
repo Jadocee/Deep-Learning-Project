@@ -1,9 +1,9 @@
 from typing import Dict
 from unittest import TestCase
 
+from dataset import Dataset as CustomDataset
 from datasets import load_dataset_builder, load_dataset
 
-from dataset import Dataset as CustomDataset
 from utils.dataset_loader import DatasetLoader
 
 

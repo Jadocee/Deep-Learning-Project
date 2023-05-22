@@ -1,3 +1,4 @@
+from os.path import join
 from typing import Tuple, Dict, List, Optional, Any
 
 from datasets import DatasetDict, Dataset
@@ -11,6 +12,8 @@ from models.lstm_model import LSTMModel
 from optimisers.base_optimiser import BaseOptimiser
 from trainers.lstm_classifier_trainer import LSTMClassifierTrainer
 from utils.dataset_loader import DatasetLoader
+from utils.definitions import STUDIES_DIR
+from utils.results_utils import ResultsUtils
 from utils.text_preprocessor import TextPreprocessor
 
 
@@ -79,7 +82,7 @@ class LSTMClassifierOptimiser(BaseOptimiser):
         """
 
         splits: DatasetDict[str, Dataset] = DatasetLoader.get_tweet_topic_single_dataset()
-        preprocessor: TextPreprocessor = TextPreprocessor(max_tokens=1000)
+        preprocessor: TextPreprocessor = TextPreprocessor(max_tokens=max_tokens)
         splits = preprocessor.preprocess_dataset_dict(dataset_dict=splits)
         self.__vocab = preprocessor.get_vocab()
         train_dataloader = DataLoader(dataset=splits["train"], shuffle=True, collate_fn=self.__collate_batch,
@@ -127,7 +130,6 @@ class LSTMClassifierOptimiser(BaseOptimiser):
         #   - Data only needs to be loaded and preprocessed once
 
         train_dataloader, valid_dataloader, test_dataloader = self._prepare_data(batch_size=batch_size, max_tokens=1000)
-
         model: LSTMModel = LSTMModel(
             vocab_size=len(self.__vocab),
             embedding_dim=embedding_dim,
@@ -139,7 +141,6 @@ class LSTMClassifierOptimiser(BaseOptimiser):
             pad_idx=self.__vocab["<pad>"],
             device=self._device
         )
-
         trainer = LSTMClassifierTrainer(
             train_dataloader=train_dataloader,
             valid_dataloader=valid_dataloader,
@@ -147,7 +148,6 @@ class LSTMClassifierOptimiser(BaseOptimiser):
             vocab=self.__vocab,
             device=self._device
         )
-
         results: Dict[str, Any] = trainer.fit(
             model=model,
             learning_rate=learning_rate,
@@ -157,5 +157,14 @@ class LSTMClassifierOptimiser(BaseOptimiser):
             optimiser_name=optimiser_name,
             lr_scheduler_params=scheduler_hyperparams
         )
+        save_path: str = join(STUDIES_DIR, trial.study.study_name, f"trial_{trial.number}_{model.get_id()}")
+        ResultsUtils.plot_loss_and_accuracy_curves(
+            training_losses=results["train_losses"],
+            validation_losses=results["valid_losses"],
+            training_accuracies=results["train_accuracies"],
+            validation_accuracies=results["valid_accuracies"],
+            save_path=save_path
+        )
+        ResultsUtils.plot_confusion_matrix(cm=results["confusion_matrix"], save_path=save_path)
 
         return results["valid_accuracies"][-1]

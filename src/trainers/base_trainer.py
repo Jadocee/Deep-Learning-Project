@@ -2,8 +2,10 @@ from abc import ABC, abstractmethod
 from time import time
 from typing import Tuple, Dict, List, Optional, Any
 
+from numpy import ndarray, float64, concatenate
 from optuna import Trial, TrialPruned
 from pandas import DataFrame
+from sklearn.metrics import confusion_matrix
 from torch.nn import Module
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LRScheduler, ReduceLROnPlateau
@@ -62,7 +64,7 @@ class BaseTrainer(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def _evaluate(self, model: BaseModel, dataloader: DataLoader) -> Tuple[float, float]:
+    def _evaluate(self, model: BaseModel, dataloader: DataLoader) -> Tuple[float64, float64, ndarray, ndarray]:
         """
         Evaluate the model.
 
@@ -151,18 +153,22 @@ class BaseTrainer(ABC):
         train_accuracies: List[float] = list()
         valid_losses: List[float] = list()
         valid_accuracies: List[float] = list()
+        all_predictions: ndarray = ndarray(shape=(0,), dtype=int)
+        all_labels: ndarray = ndarray(shape=(0,), dtype=int)
 
-        print(f"Training model {model} for {epochs} epochs...")
+        print(f"Training model {model.get_id()} for {epochs} epochs...")
         accumulated_time: float = 0.0
         for epoch in range(epochs):
             t_start: float = time()
             train_loss, train_acc = self._train(model=model, optimiser=optimiser)
-            valid_loss, valid_acc = self._evaluate(model=model, dataloader=self._valid_dataloader)
+            valid_loss, valid_acc, predictions, targets = self._evaluate(model=model, dataloader=self._valid_dataloader)
             accumulated_time += time() - t_start
             train_losses.append(train_loss)
             train_accuracies.append(train_acc)
             valid_losses.append(valid_loss)
             valid_accuracies.append(valid_acc)
+            all_predictions = concatenate((all_predictions, predictions))
+            all_labels = concatenate((all_labels, targets))
 
             if trial:
                 trial.report(valid_accuracies[-1], epoch)
@@ -171,10 +177,12 @@ class BaseTrainer(ABC):
 
             message: str = ""
 
-            if len(valid_losses) > 2:
-                if valid_losses[-1] > valid_losses[-2] and valid_losses[-1] > valid_losses[-3]:
+            if len(valid_losses) > 3:
+                if valid_losses[-1] > valid_losses[-2] and valid_losses[-1] > valid_losses[-3] \
+                        and valid_losses[-1] > valid_losses[-4]:
                     message = "Validation loss increasing; model might be overfitting."
-                if train_losses[-1] > train_losses[-2] and train_losses[-1] > train_losses[-3]:
+                if train_losses[-1] > train_losses[-2] and train_losses[-1] > train_losses[-3] and \
+                        train_losses[-1] > train_losses[-4]:
                     message = "Training loss is not decreasing; model might be underfitting."
 
             df: DataFrame = DataFrame({"Epoch": f"{epoch + 1:02}/{epochs:02}", "Train Loss": f"{train_loss:.3f}",
@@ -186,11 +194,13 @@ class BaseTrainer(ABC):
                 scheduler.step(valid_loss) if isinstance(scheduler, ReduceLROnPlateau) else scheduler.step()
 
         model.set_trained()
+        print(f"Finished training {model.get_id()} in {accumulated_time}s.")
 
         return {
             "train_losses": train_losses,
             "train_accuracies": train_accuracies,
             "valid_losses": valid_losses,
             "valid_accuracies": valid_accuracies,
+            "confusion_matrix": confusion_matrix(all_labels, all_predictions),
             "time": accumulated_time
         }

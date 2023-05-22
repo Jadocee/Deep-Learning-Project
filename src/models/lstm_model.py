@@ -32,8 +32,7 @@ class LSTMModel(BaseModel):
                                   bidirectional=bidirectional, dropout=dropout if n_layers > 1 else 0))
         self._modules.append(Linear(in_features=hidden_size * 2 if bidirectional else hidden_size,
                                     out_features=output_size))
-        # self._modules.append(Dropout(p=dropout))
-        self._modules.cuda()
+        self._modules.to(self._device)
 
     def forward(self, x: Tensor) -> Tensor:
         """

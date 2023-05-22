@@ -1,6 +1,6 @@
 from typing import List, Tuple
 
-from numpy import mean, float64, ndarray
+from numpy import mean, float64, ndarray, concatenate
 from torch import Tensor, no_grad
 from torch import sum as t_sum
 from torch.nn import CrossEntropyLoss
@@ -61,7 +61,7 @@ class LSTMClassifierTrainer(BaseTrainer):
             accuracies.append(accuracy.detach().cpu().numpy())
         return mean(losses), mean(accuracies)
 
-    def _evaluate(self, model: LSTMModel, dataloader: DataLoader) -> Tuple[float64, float64]:
+    def _evaluate(self, model: LSTMModel, dataloader: DataLoader) -> Tuple[float64, float64, ndarray, ndarray]:
         """
         Evaluates an LSTM model using a dataloader and a loss function.
 
@@ -75,6 +75,8 @@ class LSTMClassifierTrainer(BaseTrainer):
         model.eval()
         losses: List[ndarray] = list()
         accuracies: List[ndarray] = list()
+        predictions: ndarray = ndarray(shape=(0,), dtype=int)
+        targets: ndarray = ndarray(shape=(0,), dtype=int)
         with no_grad():
             for batch in dataloader:
                 x: Tensor = batch["ids"].to(self._device)
@@ -85,4 +87,7 @@ class LSTMClassifierTrainer(BaseTrainer):
                 y_pred: Tensor = output.argmax(dim=1)
                 accuracy: Tensor = t_sum((y_pred == y)) / y.shape[0]
                 accuracies.append(accuracy.detach().cpu().numpy())
-        return mean(losses), mean(accuracies)
+                predictions = concatenate((predictions, y_pred.detach().cpu().numpy()))
+                targets = concatenate((targets, y.detach().cpu().numpy()))
+
+        return mean(losses), mean(accuracies), predictions, targets

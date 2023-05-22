@@ -20,7 +20,6 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 
 from models.resnet_model import ResNet18, Resblock
-from utils import cnn_util
 from utils.cnn_custom_dataset import CustomDataset
 from utils.cnn_util import CNNUtils
 

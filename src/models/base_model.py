@@ -1,6 +1,7 @@
+import uuid
 from abc import ABC, abstractmethod
 from os.path import join
-from typing import Dict, Any, Iterator
+from typing import Dict, Any, Iterator, Final
 
 import torch
 from torch import Tensor
@@ -20,6 +21,8 @@ class BaseModel(ABC):
         _device (str): The device the model is running on, defaults to "cpu".
         __trained (bool): Whether the model has been trained or not.
     """
+
+    __id: Final[str]
     _modules: ModuleList
     _device: str
     __hyperparameters: Dict[str, Any]
@@ -33,10 +36,20 @@ class BaseModel(ABC):
             device (str, optional): The device to use. Defaults to "cpu".
         """
         super().__init__()
+        self.__id = f"MODEL_{uuid.uuid4().hex[:8]}"
         self._device = device
         self._modules = ModuleList()
         self.__hyperparameters = dict()
         self.__trained = False
+
+    def get_id(self) -> str:
+        """
+        Returns the ID of the model.
+
+        Returns:
+            str: The ID of the model.
+        """
+        return self.__id
 
     def is_trained(self) -> bool:
         """
