@@ -38,7 +38,7 @@ class Main:
         "LSTM Trainer Menu": {
             1: "Optimise Hyperparameters",
         },
-        "BOW Trainer Menu": {1: "Run Bag Of Words 1"},
+        "BOW Trainer Menu": {1: "Run Bag Of Words",2:"Validate Top 10 Models", 3:"Evaluate Top 3 Models on Test Set",4: "General Analysis"},
     }
     """
     A dictionary containing the structure of the menus to be displayed on the command-line interface.
@@ -56,6 +56,7 @@ class Main:
     @staticmethod
     def __display_menu(menu_name: str) -> None:
         """
+
         Displays a specified menu on the command-line interface.
 
         Args:
@@ -170,15 +171,15 @@ class Main:
                     optimiser.validate(study_name)
                 elif choice == 3:
                     study_name: str = input(
+                        "Please enter study name to evaluate Test Set:"
+                    )
+                    optimiser.testModels(study_name)
+                elif choice == 4: 
+                    study_name: str = input(
                         "Please enter study to validate:"
                     )
                     optimiser.analyseOptimizerImpact(study_name)
                     optimiser.analyseLearningRate(study_name)
-                elif choice == 4: 
-                    study_name: str = input(
-                        "Please enter study name to evaluate Test Set:"
-                    )
-                    optimiser.testModels(study_name)
             elif current_menu == "Image Classifier Menu":
                 if choice == 0:
                     current_menu = "Main Menu"

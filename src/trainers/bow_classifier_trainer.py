@@ -30,22 +30,22 @@ class BOWClassifierTrainer(BaseTrainer):
         self.__vocab = vocab
         self.__pad_index = vocab["<pad>"]
 
-    def evaluate(self, model: BOWModel, dataloader, loss_fn = CrossEntropyLoss()):
+    def evaluate(self,model:BOWModel, dataloader, loss_fn = CrossEntropyLoss()):
         model.eval()
         losses, accuracies = [], []
         with torch.no_grad():
+            print(dataloader)
             for batch in dataloader:
                 inputs = batch['multi_hot']
                 labels = batch['label']
                 # Forward pass
-                output: Tensor = model.forward(inputs)
-                loss: Tensor = loss_fn(output, labels)
+                preds = model.forward(inputs)
+                # Calculate loss
+                loss = loss_fn(preds, labels)
+                # Log
                 losses.append(loss.detach().cpu().numpy())
-                y_pred: Tensor = output.argmax(dim=1)
-                accuracy: Tensor = t_sum((y_pred == labels)) / labels.shape[0]
+                accuracy = torch.sum(torch.argmax(preds, dim=-1) == labels) / labels.shape[0]
                 accuracies.append(accuracy.detach().cpu().numpy())
-        print(accuracies)
-        print(losses)
         return np.mean(losses), np.mean(accuracies)
 
     def train(self, model: BOWModel, dataloader, loss_fn, optimizer):

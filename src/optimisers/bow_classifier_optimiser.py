@@ -223,8 +223,7 @@ class BOWClassifierOptimiser(BaseOptimiser):
                 epochs=epochs,
                 optimiser_name=opt,
             )
-
-            accuracy, loss = trainer.evaluate(model,test_dataloader)
+            loss, accuracy = trainer.evaluate(model,test_dataloader)
             print(accuracy)
             print(loss)
             models.loc[i, 'Accuracy'] = accuracy
