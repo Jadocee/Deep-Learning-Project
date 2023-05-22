@@ -26,7 +26,7 @@ class PretrainedOptimiser(BaseOptimiser):
         dataset_dict: DatasetDict = DatasetLoader.get_tweet_topic_single_dataset()
         tokenizer = AutoTokenizer.from_pretrained(self.__pretrained_model_name)
         dataset_dict = dataset_dict.map(
-            lambda x: tokenizer(x["text"], padding="max_length", truncation=True),
+            lambda x: tokenizer(x["text"], padding="max_length", truncation=True, max_length=max_tokens),
             batched=True,
             remove_columns=["text"]
         )
