@@ -151,18 +151,34 @@ class Main:
                     print("Invalid choice. Try again.")
                     system("cls" if name == "nt" else "clear")
             elif current_menu == "BOW Trainer Menu":
+                optimiser: BOWClassifierOptimiser = BOWClassifierOptimiser(
+                        device=Main.DEVICE
+                    )
                 if choice == 0:
                     current_menu = "Main Menu"
                 elif choice == 1:
                     study_name: str = input(
                         "Enter study name or press enter to use default: "
                     )
-                    optimiser: BOWClassifierOptimiser = BOWClassifierOptimiser(
-                        device=Main.DEVICE
-                    )
                     optimiser.run(
-                        study_name=study_name if study_name != "" else None, prune=True,n_trials=10,
+                        study_name=study_name if study_name != "" else None, prune=True,n_trials=120,
                          n_warmup_steps=5, visualisations=["param_importances", "optimisation_history"])
+                elif choice == 2:  
+                    study_name: str = input(
+                        "Please enter study to validate:"
+                    )
+                    optimiser.validate(study_name)
+                elif choice == 3:
+                    study_name: str = input(
+                        "Please enter study to validate:"
+                    )
+                    optimiser.analyseOptimizerImpact(study_name)
+                    optimiser.analyseLearningRate(study_name)
+                elif choice == 4: 
+                    study_name: str = input(
+                        "Please enter study name to evaluate Test Set:"
+                    )
+                    optimiser.testModels(study_name)
             elif current_menu == "Image Classifier Menu":
                 if choice == 0:
                     current_menu = "Main Menu"

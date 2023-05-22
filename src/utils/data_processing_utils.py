@@ -58,8 +58,10 @@ class DataProcessingUtils:
             tokens = [WordNetLemmatizer().lemmatize(token) for token in tokens]
         elif stem:
             tokens = [PorterStemmer().stem(token) for token in tokens]
-
-        return tokens[:max_tokens]
+        if(max_tokens > 0):
+            return tokens[:max_tokens]
+        else:
+            return tokens
 
     @staticmethod
     def create_vocab(tokens: Iterable, min_freq: int = 1) -> Vocab:

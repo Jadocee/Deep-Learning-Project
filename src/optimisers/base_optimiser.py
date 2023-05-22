@@ -83,7 +83,7 @@ class BaseOptimiser(ABC):
                                 else n_trials * 0.1) if prune else NopPruner()
         )
         try:
-            study.optimize(self._objective, n_trials=n_trials)
+            study.optimize(self._objective, n_trials=n_trials,gc_after_trial=True)
             pruned_trials: List[FrozenTrial] = study.get_trials(deepcopy=False, states=[TrialState.PRUNED])
             complete_trials: List[FrozenTrial] = study.get_trials(deepcopy=False, states=[TrialState.COMPLETE])
 
@@ -135,11 +135,10 @@ class BaseOptimiser(ABC):
 
             # Save the results to a CSV file
             df: DataFrame = study.trials_dataframe()
-            tria
             out_csv: str = join(output_dir, "results.csv")
             df.to_csv(out_csv, index=False)
             print(f"Saved results to {out_csv}")
-
+            
         except NotImplementedError:
             print("The objective function has not been implemented.")
             raise

@@ -3,11 +3,13 @@ from typing import Dict, List, Optional
 import numpy as np
 from pandas import DataFrame
 import torch
+from torch import Tensor
 from optuna import Trial
 from torch.nn import CrossEntropyLoss
 from torch.utils.data import DataLoader
 from torchtext.vocab import Vocab
 from torch.optim import Optimizer
+from torch import sum as t_sum
 
 from models.bow_model import BOWModel
 from trainers.base_trainer import BaseTrainer
@@ -28,7 +30,7 @@ class BOWClassifierTrainer(BaseTrainer):
         self.__vocab = vocab
         self.__pad_index = vocab["<pad>"]
 
-    def evaluate(self, model: BOWModel, dataloader, loss_fn):
+    def evaluate(self, model: BOWModel, dataloader, loss_fn = CrossEntropyLoss()):
         model.eval()
         losses, accuracies = [], []
         with torch.no_grad():
@@ -36,13 +38,14 @@ class BOWClassifierTrainer(BaseTrainer):
                 inputs = batch['multi_hot']
                 labels = batch['label']
                 # Forward pass
-                preds = model.forward(inputs)
-                # Calculate loss
-                loss = loss_fn(preds, labels)
-                # Log
+                output: Tensor = model.forward(inputs)
+                loss: Tensor = loss_fn(output, labels)
                 losses.append(loss.detach().cpu().numpy())
-            accuracy = torch.sum(torch.argmax(preds, dim=-1) == labels) / labels.shape[0]
-            accuracies.append(accuracy.detach().cpu().numpy())
+                y_pred: Tensor = output.argmax(dim=1)
+                accuracy: Tensor = t_sum((y_pred == labels)) / labels.shape[0]
+                accuracies.append(accuracy.detach().cpu().numpy())
+        print(accuracies)
+        print(losses)
         return np.mean(losses), np.mean(accuracies)
 
     def train(self, model: BOWModel, dataloader, loss_fn, optimizer):
@@ -65,6 +68,7 @@ class BOWClassifierTrainer(BaseTrainer):
             losses.append(loss.detach().cpu().numpy())
             accuracy = torch.sum(torch.argmax(preds, dim=-1) == labels) / labels.shape[0]
             accuracies.append(accuracy.detach().cpu().numpy())
+
         return np.mean(losses), np.mean(accuracies)
 
     def run(self,
@@ -103,3 +107,4 @@ class BOWClassifierTrainer(BaseTrainer):
             #     epoch + 1, train_loss, train_accuracy, valid_loss, valid_accuracy))
 
         return valid_accuracies[-1]
+
