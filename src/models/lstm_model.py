@@ -27,14 +27,12 @@ class LSTMModel(BaseModel):
             device (str, optional): The device to use. Defaults to "cpu".
         """
         super().__init__(device=device)
-        self._modules \
-            .extend([
-            Embedding(num_embeddings=vocab_size, embedding_dim=embedding_dim, padding_idx=pad_idx),
-            LSTM(input_size=embedding_dim, hidden_size=hidden_size, num_layers=n_layers,
-                 bidirectional=bidirectional, dropout=dropout if n_layers > 1 else 0),
-            Linear(in_features=hidden_size * 2 if bidirectional else hidden_size, out_features=output_size)
-        ]) \
-            .to(self._device)
+        self._modules.append(Embedding(num_embeddings=vocab_size, embedding_dim=embedding_dim, padding_idx=pad_idx))
+        self._modules.append(LSTM(input_size=embedding_dim, hidden_size=hidden_size, num_layers=n_layers,
+                                  bidirectional=bidirectional, dropout=dropout if n_layers > 1 else 0))
+        self._modules.append(Linear(in_features=hidden_size * 2 if bidirectional else hidden_size,
+                                    out_features=output_size))
+        self._modules.to(self._device)
 
     def forward(self, x: Tensor) -> Tensor:
         """

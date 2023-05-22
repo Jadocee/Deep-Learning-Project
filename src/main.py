@@ -1,15 +1,14 @@
 from os import system, name
 from os.path import exists
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List, Final
 
-from nltk.downloader import download
-from torch.cuda import is_available as has_cuda
+from torch.cuda import is_available as has_cuda, empty_cache
 
 from optimisers.bow_classifier_optimiser import BOWClassifierOptimiser
 from optimisers.lstm_classifier_optimiser import LSTMClassifierOptimiser
-from utils.definitions import MODELS_DIR, STUDIES_DIR
 from trainers.cnn_trainer import menu_prompt
+from utils.definitions import MODELS_DIR, STUDIES_DIR
 
 
 class Main:
@@ -17,32 +16,43 @@ class Main:
     Main class which acts as the command-line interface of the application.
 
     This class is not meant to be instantiated. It provides several static methods for interacting with the application.
+
+    Attributes:
+        DEVICE (str): The device to be used for computations. If CUDA is available, it defaults to "cuda", else "cpu".
+        MENUS (Dict[str, Dict[int, str]]): A dictionary containing the structure of the menus to be displayed on the
+            command-line interface. The keys are the names of the menus, and the values are dictionaries containing the
+            menu items. The keys of the menu items are the numbers to be entered by the user to select the menu item,
+            and the values are the names of the menu items. The menu items are displayed in the order of their keys. For
+            example, the "Main Menu" has 4 menu items, and the "Tweet Classifier Menu" has 2 menu items. The "Main Menu"
+            is displayed first, and the user can select one of the 4 menu items. If the user selects the "Tweet
+            Classifier Menu", the "Tweet Classifier Menu" is displayed, and the user can select one of the 2 menu items.
+            The user can always go back to the "Main Menu" by entering 0. The user can exit the application by entering
+            -1.
     """
 
-    DEVICE: str = "cuda" if has_cuda() else "cpu"
-    """
-    The device to be used for computations. If CUDA is available, it defaults to "cuda", else "cpu".
-    """
+    DEVICE: Final[str] = "cuda" if has_cuda() else "cpu"
 
-    MENUS: Dict[str, Dict[int, str]] = {
-        "Main Menu": {
-            1: "Image Classifier",
-            2: "Tweet Classifier",
-            3: "Download NLTK Data",
-            4: "Check CUDA Availability",
-        },
-        "Image Classifier Menu": {
-            1: "Resnet Model",
-        },
-        "Tweet Classifier Menu": {1: "LSTM Trainer", 2: "BOW Trainer"},
-        "LSTM Trainer Menu": {
-            1: "Optimise Hyperparameters",
-        },
-        "BOW Trainer Menu": {1: "Run Bag Of Words",2:"Validate Top 10 Models", 3:"Evaluate Top 3 Models on Test Set",4: "General Analysis"},
+    MENUS: Final[Dict[str, List[str]]] = {
+        "Main Menu": [
+            "Image Classifier",
+            "Tweet Classifier",
+            "Check CUDA Availability",
+            "Clear CUDA Cache",
+        ],
+        "Image Classifier Menu": [
+            "TODO"
+        ],
+        "Tweet Classifier Menu": [
+            "LSTM Trainer",
+            "BOW Trainer",
+        ],
+        "LSTM Trainer Menu": [
+            "Optimise Hyperparameters",
+        ],
+        "BOW Trainer Menu": [
+            "Run Bag Of Words 1",
+        ]
     }
-    """
-    A dictionary containing the structure of the menus to be displayed on the command-line interface.
-    """
 
     def __init__(self) -> None:
         """
@@ -54,9 +64,20 @@ class Main:
         raise Exception("This class is not meant to be instantiated")
 
     @staticmethod
+    def __clear_cuda_cache() -> None:
+        """
+        Clears the CUDA cache.
+
+        This method takes no arguments and returns nothing. It clears the CUDA cache by calling the clear() method of
+        the torch.cuda module.
+        """
+        print("Clearing CUDA cache...")
+        empty_cache()
+        print("Cleared CUDA cache")
+
+    @staticmethod
     def __display_menu(menu_name: str) -> None:
         """
-
         Displays a specified menu on the command-line interface.
 
         Args:
@@ -67,9 +88,9 @@ class Main:
         if menu_name not in Main.MENUS.keys():
             raise Exception(f"Unknown menu: {menu_name}")
 
-        menu: Dict[int, str] = Main.MENUS[menu_name]
+        menu: List[str] = Main.MENUS[menu_name]
         print(f"--- {menu_name} ---")
-        for key, value in menu.items():
+        for key, value in enumerate(menu, start=1):
             print(f"{key}. {value}")
         if menu_name != "Main Menu":
             print("0. Main Menu")
@@ -87,7 +108,13 @@ class Main:
 
         while True:
             Main.__display_menu(current_menu)
-            choice: int = int(input("Enter choice: "))
+
+            try:
+                choice: int = int(input("Enter choice: "))
+            except ValueError:
+                print("Invalid choice. Try again.")
+                system("cls" if name == "nt" else "clear")
+                continue
 
             if choice == -1:
                 print("Exiting...")
@@ -99,11 +126,11 @@ class Main:
                 elif choice == 2:
                     current_menu = "Tweet Classifier Menu"
                 elif choice == 3:
-                    download("stopwords")
-                    download("punkt")
-                    download("wordnet")
-                elif choice == 4:
                     print(f"CUDA is {'available' if has_cuda() else 'not available'}")
+                    input("Press any key to continue...")
+                    system("cls" if name == "nt" else "clear")
+                elif choice == 4:
+                    Main.__clear_cuda_cache()
                     input("Press any key to continue...")
                     system("cls" if name == "nt" else "clear")
                 else:
@@ -133,53 +160,18 @@ class Main:
                     current_menu = "Main Menu"
                 elif choice == 1:
                     system("cls" if name == "nt" else "clear")
-
-                    study_name: str = input(
-                        "Enter study name or press enter to use default: "
-                    )
-                    optimiser: LSTMClassifierOptimiser = LSTMClassifierOptimiser(
-                        device=Main.DEVICE
-                    )
-                    optimiser.run(
-                        study_name=study_name if study_name != "" else None, prune=True
-                    )
-                    study_name: str = input("Enter study name or press enter to use default: ")
                     optimiser: LSTMClassifierOptimiser = LSTMClassifierOptimiser(device=Main.DEVICE)
-                    optimiser.run(study_name=study_name if study_name != "" else None, prune=True, n_trials=200,
-                                  n_warmup_steps=5, visualisations=["param_importances", "optimisation_history"])
-
+                    optimiser.run()
                 else:
                     print("Invalid choice. Try again.")
                     system("cls" if name == "nt" else "clear")
             elif current_menu == "BOW Trainer Menu":
-                optimiser: BOWClassifierOptimiser = BOWClassifierOptimiser(
-                        device=Main.DEVICE
-                    )
                 if choice == 0:
                     current_menu = "Main Menu"
                 elif choice == 1:
-                    study_name: str = input(
-                        "Enter study name or press enter to use default: "
-                    )
-                    optimiser.run(
-                        study_name=study_name if study_name != "" else None, prune=True,n_trials=120,
-                         n_warmup_steps=5, visualisations=["param_importances", "optimisation_history"])
-                elif choice == 2:  
-                    study_name: str = input(
-                        "Please enter study to validate:"
-                    )
-                    optimiser.validate(study_name)
-                elif choice == 3:
-                    study_name: str = input(
-                        "Please enter study name to evaluate Test Set:"
-                    )
-                    optimiser.testModels(study_name)
-                elif choice == 4: 
-                    study_name: str = input(
-                        "Please enter study to validate:"
-                    )
-                    optimiser.analyseOptimizerImpact(study_name)
-                    optimiser.analyseLearningRate(study_name)
+                    print({"BagOfWords"})
+                    optimiser: BOWClassifierOptimiser = BOWClassifierOptimiser(device=Main.DEVICE)
+                    optimiser.run(None, prune=True)
             elif current_menu == "Image Classifier Menu":
                 if choice == 0:
                     current_menu = "Main Menu"
@@ -213,9 +205,37 @@ class Main:
 
         This method performs the initial setup and then launches the command-line interface.
         """
+        # Check if CUDA cache needs to be cleared
         Main.__initial_setup()
         Main.__switch_menu()
 
 
 if __name__ == "__main__":
     Main.main()
+
+# --------------- Thomas ---------------#
+# TODO: Uncomment and integrate with main.py
+# Packaged with - dataset.py, resnet.py, resnet_trainer.py
+# Author - Thomas Bandy (c3374048)
+
+# from Util.train import Train
+# from Util import util
+# learn_rates = [0.0001, 0.001, 0.01]
+# epochs = [5, 10, 50]
+# widths = [10, 50, 100, 500]
+# activation_function = ['ReLU', 'Sigmoid', 'CeLU']
+# test = Train()
+
+# test.prepare_data()
+# util.print_checks(test.train_data, test.valid_data, test.test_data, test.train_loader, test.valid_loader, test.test_loader)
+# test.begin_training(10, 2, 0.001)
+
+# --------------- Test all hyper-params ---------------#
+# for (w, e, lr) in widths, epochs, learn_rates:
+#     test = Train()
+#     test.prepare_data()
+#     util.print_checks(test.train_data, test.valid_data, test.test_data, test.train_loader, test.valid_loader, test.test_loader)
+#     test.begin_training(w, e, lr)
+
+# --------------- Metrics ---------------#
+# util.loss_acc_diagram(test.train_losses, test.val_losses, test.train_accs, test.val_accs)

@@ -13,14 +13,15 @@
 # Date: May 12, 2023
 
 import torch
-from models.resnet_model import ResNet18, Resblock
-from utils.cnn_custom_dataset import Custom_Dataset
+from sklearn.metrics import confusion_matrix, classification_report
 from torch.nn import CrossEntropyLoss
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 from torchvision import transforms
-from utils import cnn_util
-from sklearn.metrics import confusion_matrix, classification_report
+
+from models.resnet_model import ResNet18, Resblock
+from utils.cnn_custom_dataset import CustomDataset
+from utils.cnn_util import CNNUtils
 
 
 class Trainer:
@@ -108,16 +109,16 @@ class Trainer:
             [transforms.Resize(size=(150, 150)), transforms.ToTensor()]
         )
 
-        self.train_data = Custom_Dataset(
+        self.train_data = CustomDataset(
             "Deep-Learning-Project\data\intel_image_classification_dataset\seg_train\seg_train",
             transform=train_transforms,
         )
 
-        self.valid_data = Custom_Dataset(
+        self.valid_data = CustomDataset(
             "Deep-Learning-Project\data\intel_image_classification_dataset\seg_test\seg_test",
             transform=eval_transforms,
         )
-        self.test_data = Custom_Dataset(
+        self.test_data = CustomDataset(
             "Deep-Learning-Project\data\mock_test",
             transform=eval_transforms,
         )
@@ -215,8 +216,8 @@ class Trainer:
         print(confusion_matrix(y_true_test, y_pred_test))
         print(classification_report(y_true_test, y_pred_test))
         hyper_params = [str_model, width, num_epochs, learning_rate]
-        cnn_util.generate_reports(y_true_test, y_pred_test, test_accuracy, hyper_params)
-        cnn_util.loss_acc_diagram(
+        CNNUtils.generate_reports(y_true_test, y_pred_test, test_accuracy, hyper_params)
+        CNNUtils.loss_acc_diagram(
             self.train_losses,
             self.val_losses,
             self.train_accs,

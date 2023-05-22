@@ -1,8 +1,11 @@
+import uuid
 from abc import ABC, abstractmethod
 from os.path import join
+from typing import Dict, Any, Iterator, Final
 
 import torch
-from torch.nn import ModuleList
+from torch import Tensor
+from torch.nn import ModuleList, Parameter
 
 from utils.definitions import MODELS_DIR
 
@@ -16,9 +19,14 @@ class BaseModel(ABC):
     Attributes:
         _modules (ModuleList): A ModuleList to hold the submodules.
         _device (str): The device the model is running on, defaults to "cpu".
+        __trained (bool): Whether the model has been trained or not.
     """
+
+    __id: Final[str]
     _modules: ModuleList
     _device: str
+    __hyperparameters: Dict[str, Any]
+    __trained: bool
 
     def __init__(self, device: str = "cpu"):
         """
@@ -28,60 +36,117 @@ class BaseModel(ABC):
             device (str, optional): The device to use. Defaults to "cpu".
         """
         super().__init__()
+        self.__id = f"MODEL_{uuid.uuid4().hex[:8]}"
         self._device = device
         self._modules = ModuleList()
+        self.__hyperparameters = dict()
+        self.__trained = False
 
-    @property
-    def parameters(self):
+    def get_id(self) -> str:
+        """
+        Returns the ID of the model.
+
+        Returns:
+            str: The ID of the model.
+        """
+        return self.__id
+
+    def is_trained(self) -> bool:
+        """
+        Returns whether the model has been trained or not.
+
+        Returns:
+            bool: True if the model has been trained, False otherwise.
+        """
+        return self.__trained
+
+    def set_trained(self, trained: bool = True) -> None:
+        """
+        Sets the trained attribute of the model.
+
+        This method is used to set the trained attribute of the model to True after training, and should only be called
+        by the trainer after the final epoch of the fitting/training process.
+
+        Args:
+            trained (bool, optional): The value to set the trained attribute to. Defaults to True.
+
+        Returns:
+            None
+        """
+        self.__trained = trained
+
+    def get_parameters(self) -> Iterator[Parameter]:
         """
         Returns the parameters of the model.
 
         Returns:
-            Parameter: The parameters of the model.
+            Iterator[Parameter]: An iterator over the parameters of the model.
         """
         return self._modules.parameters()
 
-    def save(self, model_name: str):
-        torch.save(self._modules.state_dict(), join(MODELS_DIR, f"{model_name}.pt"))
+    def save(self, model_name: str, trainer_parameters: Dict[str, Any] = None):
+        # Get type of the subclass
+        model_data: Dict[str, Any] = {
+            "model_type": type(self),
+            "hyperparameters": self.__hyperparameters,
+            "model_state_dict": self._modules.state_dict()
+        }
+        if trainer_parameters:
+            model_data.update(trainer_parameters)
+        torch.save(model_data, join(MODELS_DIR, f"{model_name}.pt"))
 
-    def load(self, model_name: str):
-        self._modules.load_state_dict(torch.load(join(MODELS_DIR, f"{model_name}.pt")))
+    def get_device(self) -> str:
+        """
+        Returns the device the model is running on.
 
-    def train(self, mode=True):
+        Returns:
+            str: The device the model is running on.
+        """
+        return self._device
+
+    def set_device(self, device: str) -> None:
+        """
+        Sets the device that the model is running on.
+
+        Updates the `_device` attribute and moves the model to the new device.
+
+        Args:
+            device (str): The device to use.
+
+        Returns:
+            None
+        """
+        self._device = device
+        self._modules.to(device)
+
+    def train(self, mode=True) -> None:
         """
         Sets the mode of the model to train.
 
         Args:
             mode (bool, optional): The mode to set the model to. Defaults to True.
+
+        Returns:
+            None
         """
         self._modules.train(mode=mode)
 
-    def eval(self):
+    def eval(self) -> None:
         """
         Sets the mode of the model to eval.
+
+        Returns:
+            None
         """
         self._modules.eval()
 
-    def predict(self, x):
-        """
-        Predicts the output given the input x.
-
-        Args:
-            x (torch.Tensor): The input tensor.
-
-        Returns:
-            torch.Tensor: The output tensor.
-        """
-        return self._modules(x)
-
     @abstractmethod
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         """
-        Abstract method for the forward pass of the model.
-        Needs to be implemented in any subclass.
+        Abstract method for the forward pass of the model. Needs to be implemented in any subclass.
 
         Args:
-            x (torch.Tensor): The input tensor.
+            x (Tensor): The input tensor.
 
         Raises:
             NotImplementedError: If the method is not implemented in a subclass.

@@ -85,24 +85,24 @@ class ResNet18(nn.Module):
         self.gap = torch.nn.AdaptiveAvgPool2d(1)
         self.fc = torch.nn.Linear((out_channel * 8), outputs)
 
-    def forward(self, input):
+    def forward(self, _input):
         """Performs the forward pass of the ResNet18 model.
 
         Args:
-            input (torch.Tensor): Input tensor.
+            _input (torch.Tensor): Input tensor.
 
         Returns:
             torch.Tensor: Output tensor after applying the forward pass.
         """
-        input = self.layer0(input)
-        input = self.layer1(input)
-        input = self.layer2(input)
-        input = self.layer3(input)
-        input = self.layer4(input)
-        input = self.gap(input)
-        input = input.view(input.size(0), -1)
-        input = self.fc(input)
-        return input
+        _input = self.layer0(_input)
+        _input = self.layer1(_input)
+        _input = self.layer2(_input)
+        _input = self.layer3(_input)
+        _input = self.layer4(_input)
+        _input = self.gap(_input)
+        _input = _input.view(_input.size(0), -1)
+        _input = self.fc(_input)
+        return _input
 
 
 class Resblock(nn.Module):
@@ -146,17 +146,17 @@ class Resblock(nn.Module):
         self.bn1 = nn.BatchNorm2d(out_channels)
         self.bn2 = nn.BatchNorm2d(out_channels)
 
-    def forward(self, input):
+    def forward(self, _input):
         """Performs the forward pass of the residual block.
 
         Args:
-            input (torch.Tensor): Input tensor.
+            _input (torch.Tensor): Input tensor.
 
         Returns:
             torch.Tensor: Output tensor after applying the residual block.
         """
-        shortcut = self.shortcut(input)
-        input = nn.Sigmoid()(self.bn1(self.conv1(input)))
-        input = nn.Sigmoid()(self.bn2(self.conv2(input)))
-        input = input + shortcut
-        return nn.Sigmoid()(input)
+        shortcut = self.shortcut(_input)
+        _input = nn.Sigmoid()(self.bn1(self.conv1(_input)))
+        _input = nn.Sigmoid()(self.bn2(self.conv2(_input)))
+        _input = _input + shortcut
+        return nn.Sigmoid()(_input)

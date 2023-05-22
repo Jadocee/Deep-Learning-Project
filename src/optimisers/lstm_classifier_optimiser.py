@@ -1,7 +1,7 @@
-from itertools import chain
-from typing import Tuple, Union, Dict, List, Optional, Any
+from os.path import join
+from typing import Tuple, Dict, List, Optional, Any
 
-from nltk.lm import Vocabulary
+from datasets import DatasetDict, Dataset
 from optuna import Trial
 from torch import Tensor, stack
 from torch.nn.utils.rnn import pad_sequence
@@ -11,81 +11,88 @@ from torchtext.vocab import Vocab
 from models.lstm_model import LSTMModel
 from optimisers.base_optimiser import BaseOptimiser
 from trainers.lstm_classifier_trainer import LSTMClassifierTrainer
-from utils.data_processing_utils import DataProcessingUtils
 from utils.dataset_loader import DatasetLoader
-
-
-def prepare_data(batch_size: int, max_tokens: int) \
-        -> Tuple[DataLoader, DataLoader, DataLoader, Union[Vocab, Vocabulary]]:
-    """
-    Prepare the data for LSTM classifier training.
-
-    Args:
-        batch_size (int): The batch size.
-        max_tokens (int): The maximum number of tokens.
-
-    Returns:
-        Tuple[DataLoader, DataLoader, DataLoader, Union[Vocab, Vocabulary]]: Returns the train, validation, and test
-        dataloaders, and the vocabulary.
-    """
-    # TODO: Move to utility class
-    # TODO: Make this reusable for other datasets
-
-    train_data, valid_data, test_data = DatasetLoader.get_tweet_topic_single_dataset()
-
-    # Standardise the data
-    train_data = train_data.map(
-        lambda x: {"tokens": DataProcessingUtils.standardise_text(text=x["text"], max_tokens=max_tokens)})
-    valid_data = valid_data.map(
-        lambda x: {"tokens": DataProcessingUtils.standardise_text(text=x["text"], max_tokens=max_tokens)})
-    test_data = test_data.map(
-        lambda x: {"tokens": DataProcessingUtils.standardise_text(text=x["text"], max_tokens=max_tokens)})
-
-    # Create the vocabulary
-    vocab: Vocab = DataProcessingUtils.create_vocab(
-        chain(train_data["tokens"], valid_data["tokens"], test_data["tokens"]))
-
-    def __collate(batch: List[Dict[str, Tensor]]) -> Dict[str, Tensor]:
-        batch_ids: Tensor = pad_sequence(([item["ids"] for item in batch]),
-                                         padding_value=vocab["<pad>"], batch_first=True)
-        batch_label: Tensor = stack([item["label"] for item in batch])
-        batch: Dict[str, Tensor] = {"ids": batch_ids, "label": batch_label}
-        return batch
-
-    # Vectorise the data using vocabulary indexing
-    train_data = train_data.map(
-        lambda x: {"ids": DataProcessingUtils.vocabularise_text(tokens=x["tokens"], vocab=vocab)})
-    valid_data = valid_data.map(
-        lambda x: {"ids": DataProcessingUtils.vocabularise_text(tokens=x["tokens"], vocab=vocab)})
-    test_data = test_data.map(
-        lambda x: {"ids": DataProcessingUtils.vocabularise_text(tokens=x["tokens"], vocab=vocab)})
-
-    # Convert the data to tensors
-    train_data = train_data.with_format(type="torch", columns=["ids", "label"])
-    valid_data = valid_data.with_format(type="torch", columns=["ids", "label"])
-    test_data = test_data.with_format(type="torch", columns=["ids", "label"])
-
-    # Create the dataloaders
-    train_dataloader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True, collate_fn=__collate)
-    valid_dataloader = DataLoader(dataset=valid_data, batch_size=batch_size, collate_fn=__collate)
-    test_dataloader = DataLoader(dataset=test_data, batch_size=batch_size, collate_fn=__collate)
-
-    return train_dataloader, valid_dataloader, test_dataloader, vocab
+from utils.definitions import STUDIES_DIR
+from utils.results_utils import ResultsUtils
+from utils.text_preprocessor import TextPreprocessor
 
 
 class LSTMClassifierOptimiser(BaseOptimiser):
     """
     Class for the LSTM classifier optimiser. Inherits from the BaseOptimiser class.
+
+    Attributes:
+        __vocab (Vocab): A torchtext Vocab object which encodes the vocabulary used in the dataset.
+        __max_tokens (int): The maximum number of tokens to pass to the LSTM model. The tokens are truncated
+            if they exceed this value during the standardisation process.
     """
 
-    def __init__(self, device: str = "cpu"):
+    __vocab: Vocab
+
+    def __init__(self, device: str = "cpu") -> None:
         """
         Initializes the LSTMClassifierOptimiser class.
 
         Args:
             device (str, optional): The device to use for computations. Defaults to "cpu".
+
+        Notes:
+            - A lower value for `max_tokens` will result less memory usage, but may result in a loss of information.
+            - A larger value for `max_tokens` will result in more memory usage, but may result in a more accurate model.
+
+        Returns:
+            None
         """
         super().__init__(device=device)
+
+    def __collate_batch(self, batch: List[Dict[str, Tensor]]) -> Dict[str, Tensor]:
+        """
+        Collates a batch of data into a dictionary.
+
+        Args:
+            batch (List[Dict[str, Tensor]]): A list of dictionaries containing the data to collate.
+
+        Returns:
+            Dict[str, Tensor]: A dictionary containing the collated data.
+        """
+
+        batch_ids: Tensor = pad_sequence(([item["ids"] for item in batch]),
+                                         padding_value=self.__vocab["<pad>"], batch_first=True)
+        batch_label: Tensor = stack([item["label"] for item in batch])
+        batch: Dict[str, Tensor] = {"ids": batch_ids, "label": batch_label}
+        return batch
+
+    def _prepare_data(self, batch_size: int, max_tokens: int) -> Tuple[DataLoader, DataLoader, DataLoader]:
+        """
+        Performs the data preparation step for the LSTM classifier optimiser.
+
+        Prepares the data by loading the training, validation, and testing splits of the Tweet Topic dataset,
+        standardising and tokenising the text, and creating a vocabulary from the training data. The data is then
+        split into batches and loaded into DataLoaders.
+
+        Notes:
+            - The DataLoaders use the `_collate` method to collate the data into batches.
+            - The DataLoaders are stored in the `_train_dataloader`, `_valid_dataloader`, and `_test_dataloader`
+                attributes.
+            - The vocabulary is stored in the `_vocab` attribute.
+            - The maximum number of tokens is stored in the `_max_tokens` attribute.
+
+        Returns:
+            Tuple[DataLoader, DataLoader, DataLoader]: The training, validation, and testing DataLoaders, respectively.
+        """
+
+        splits: DatasetDict[str, Dataset] = DatasetLoader.get_tweet_topic_single_dataset()
+        preprocessor: TextPreprocessor = TextPreprocessor(max_tokens=max_tokens)
+        splits = preprocessor.preprocess_dataset_dict(dataset_dict=splits)
+        self.__vocab = preprocessor.get_vocab()
+        train_dataloader = DataLoader(dataset=splits["train"], shuffle=True, collate_fn=self.__collate_batch,
+                                      batch_size=batch_size)
+        valid_dataloader = DataLoader(dataset=splits["validation"], shuffle=True, collate_fn=self.__collate_batch,
+                                      batch_size=batch_size)
+        test_dataloader = DataLoader(dataset=splits["test"], collate_fn=self.__collate_batch,
+                                     batch_size=batch_size)
+
+        return train_dataloader, valid_dataloader, test_dataloader
 
     def _objective(self, trial: Trial) -> float:
         """
@@ -93,91 +100,71 @@ class LSTMClassifierOptimiser(BaseOptimiser):
         model are suggested.
 
         Args:
-            trial (Trial): Optuna's trial object.
+            trial (Trial): The trial object for the current Optuna study.
 
         Returns:
             float: The accuracy of the model on the validation set.
         """
-        # Suggestions for hyperparameters
-        epochs: int = trial.suggest_categorical("epochs", [3, 5, 10, 20, 50])
+        self._logger.info(f"Trial number: {trial.number}")
+
+        epochs: int = trial.suggest_categorical("epochs", [5, 10])
+        learning_rate: float = trial.suggest_float("learning_rate", 1e-6, 1e-1, log=True)
+        batch_size: int = trial.suggest_categorical("batch_size", [32, 64, 128, 256])
+        optimiser_name: str = trial.suggest_categorical("optimiser", ["Adam"])
         n_layers: int = trial.suggest_int("n_layers", 1, 5)
         bidirectional: bool = trial.suggest_categorical("bidirectional", [True, False])
-        learning_rate: float = trial.suggest_float("learning_rate", 1e-6, 1e-1, log=True)
-        batch_size: int = trial.suggest_categorical("batch_size", [8, 32, 64, 128, 256])
-        hidden_size: int = trial.suggest_categorical("hidden_size", [128, 256, 512, 1024, 2048])
-        max_tokens: int = trial.suggest_categorical("max_tokens", [100, 200, 300, 400, 500, 600])
-        embedding_dim: int = trial.suggest_categorical("embedding_dim", [100, 200, 300])
-        optimiser_name: str = trial.suggest_categorical("optimiser", ["Adam", "RMSprop", "SGD", "Adagrad"])
-        dropout: float = trial.suggest_float("dropout", 0.0, 0.5)
-        lr_scheduler_name: Optional[str] = trial.suggest_categorical("lr_scheduler",
-                                                                     ["StepLR", "ExponentialLR", "MultiStepLR", None,
-                                                                      "ReduceLROnPlateau", "CosineAnnealingLR"])
-        # Suggest hyperparameters for the learning rate scheduler based on the chosen learning rate scheduler
-        kwargs: Dict[str, Any] = dict()
-        if lr_scheduler_name == "StepLR":
-            step_size: int = trial.suggest_int("step_size", 1, 100)
-            gamma: float = trial.suggest_float("gamma", 0.1, 0.9)
-            kwargs.update({"step_size": step_size, "gamma": gamma})
-        elif lr_scheduler_name == "ExponentialLR":
-            gamma: float = trial.suggest_float("gamma", 0.1, 0.9)
-            kwargs.update({"gamma": gamma})
-        elif lr_scheduler_name == "MultiStepLR":
-            n_milestones: int = trial.suggest_int("n_milestones", 1, 5)
-            milestones: List[int] = list()
-            for i in range(n_milestones):
-                milestones.append(trial.suggest_int(f"milestone_{i}", 1, epochs - 1))
-            gamma: float = trial.suggest_float("gamma", 0.1, 0.9)
-            kwargs.update({"milestones": milestones, "gamma": gamma})
-        elif lr_scheduler_name == "ReduceLROnPlateau":
-            factor: float = trial.suggest_float("factor", 0.1, 0.9)
-            patience: int = trial.suggest_int("patience", 1, 10)
-            threshold: float = trial.suggest_float("threshold", 1e-4, 1e-1)
-            threshold_mode: str = trial.suggest_categorical("threshold_mode", ["rel", "abs"])
-            cooldown: int = trial.suggest_int("cooldown", 1, 10)
-            min_lr: float = trial.suggest_float("min_lr", 1e-6, 1e-1, log=True)
-            kwargs.update({"factor": factor, "patience": patience, "threshold": threshold,
-                           "threshold_mode": threshold_mode, "cooldown": cooldown, "min_lr": min_lr})
-        elif lr_scheduler_name == "CosineAnnealingLR":
-            T_max: int = trial.suggest_int("T_max", 1, epochs - 1)
-            eta_min: float = trial.suggest_float("eta_min", 1e-4, 1e-1)
-            kwargs.update({"T_max": T_max, "eta_min": eta_min})
+        hidden_size: int = trial.suggest_categorical("hidden_size", [256, 512, 1024, 2048])
+        embedding_dim: int = trial.suggest_categorical("embedding_dim", [100, 200, 300, 400, 500])
+        if n_layers > 1:
+            dropout: float = trial.suggest_float("dropout", 0.1, 0.5)
+        else:
+            dropout: float = trial.suggest_float("dropout", 0.0, 0.0)
+        scheduler_hyperparams: Optional[Dict[str, Any]] = self._define_scheduler_hyperparams(trial)
 
-        # Load and preprocess the data
-        train_dataloader, valid_dataloader, test_dataloader, vocab = prepare_data(batch_size=batch_size,
-                                                                                  max_tokens=max_tokens)
-        # Create the model
+        self._logger.info(f"Selected hyperparameters: {trial.params.__str__()}")
+
+        # TODO: Store the trainer as an attribute of the optimiser
+        #   - Trainer and dataloaders can be reused for each trial
+        #   - Easier transition to evaluating the model on the test set
+        #   - The batch size for the dataloaders can be changed for each trial
+        #   - Data only needs to be loaded and preprocessed once
+
+        train_dataloader, valid_dataloader, test_dataloader = self._prepare_data(batch_size=batch_size, max_tokens=1000)
         model: LSTMModel = LSTMModel(
-            vocab_size=len(vocab),
+            vocab_size=len(self.__vocab),
             embedding_dim=embedding_dim,
             hidden_size=hidden_size,
             n_layers=n_layers,
             bidirectional=bidirectional,
-            pad_idx=vocab["<pad>"],
-            output_size=6,
             dropout=dropout,
-            device=self._device,
+            output_size=6,
+            pad_idx=self.__vocab["<pad>"],
+            device=self._device
         )
-
-        # Create the trainer
-        trainer: LSTMClassifierTrainer = LSTMClassifierTrainer(
+        trainer = LSTMClassifierTrainer(
             train_dataloader=train_dataloader,
             valid_dataloader=valid_dataloader,
             test_dataloader=test_dataloader,
-            vocab=vocab,
-            device=self._device,
+            vocab=self.__vocab,
+            device=self._device
         )
-
-        # Train the model
-        accuracy = trainer.run(
+        results: Dict[str, Any] = trainer.fit(
             model=model,
             learning_rate=learning_rate,
             epochs=epochs,
             batch_size=batch_size,
-            max_tokens=max_tokens,
             trial=trial,
             optimiser_name=optimiser_name,
-            lr_scheduler_name=lr_scheduler_name,
-            kwargs=kwargs
+            lr_scheduler_params=scheduler_hyperparams
         )
+        save_path: str = join(STUDIES_DIR, trial.study.study_name, f"trial_{trial.number}_{model.get_id()}")
+        ResultsUtils.plot_loss_and_accuracy_curves(
+            training_losses=results["train_losses"],
+            validation_losses=results["valid_losses"],
+            training_accuracies=results["train_accuracies"],
+            validation_accuracies=results["valid_accuracies"],
+            save_path=save_path
+        )
+        ResultsUtils.plot_confusion_matrix(cm=results["confusion_matrix"], save_path=save_path)
 
-        return accuracy
+        return results["valid_accuracies"][-1]

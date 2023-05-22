@@ -10,14 +10,15 @@
 
 import glob
 import os
+from typing import Optional
 
 import pandas as pd
-import numpy as np
 from PIL import Image
 from torch.utils.data import Dataset
+from torchvision.transforms import Compose
 
 
-class Custom_Dataset(Dataset):
+class CustomDataset(Dataset):
     """
     Custom dataset class for loading images and labels from a directory.
 
@@ -36,13 +37,13 @@ class Custom_Dataset(Dataset):
             __getitem__(idx): Retrieves the image and its corresponding label at the given index.
     """
 
-    def __init__(self, data_dir, transform=None):
+    def __init__(self, data_dir: str, transform: Optional[Compose] = None):
         """
         Initializes the object of the class.
 
         Args:
             data_dir (str): The directory path containing the image data.
-            transform (optional): A transformation to be applied to the images (default: None).
+            transform (Optional[Compose], optional): A transformation to be applied to the images (default: None).
 
         Attributes:
             image_paths (list): A list of paths to image files.
