@@ -9,12 +9,13 @@ from sys import stdout
 from typing import List, Optional, Dict, Any, Tuple, Final, Set
 
 from matplotlib.axes import Axes
-from optuna import Trial, Study, create_study, visualization
+from optuna import Trial, Study, create_study
 from optuna import logging as optuna_logging
 from optuna.pruners import MedianPruner, NopPruner, BasePruner, HyperbandPruner
 from optuna.study import StudyDirection
 from optuna.trial import FrozenTrial, TrialState
-from optuna.visualization.matplotlib import plot_param_importances, plot_optimization_history
+from optuna.visualization.matplotlib import plot_param_importances, plot_optimization_history, plot_slice, plot_contour, \
+    plot_parallel_coordinate
 from pandas import DataFrame
 from torch.utils.data import DataLoader
 
@@ -254,15 +255,15 @@ class BaseOptimiser(ABC):
             with warnings.catch_warnings():
                 # Ignore 'ExperimentalWarning' warnings from Optuna
                 warnings.simplefilter("ignore")
-                ax: Axes = visualization.plot_slice(study)
+                ax: Axes = plot_slice(study)
                 ax.set_title("Slice Plot")
                 ax.figure.savefig(join(output_dir, "slice.png"))
                 ax.clear()
-                ax: Axes = visualization.plot_contour(study)
+                ax: Axes = plot_contour(study)
                 ax.set_title("Contour Plot")
                 ax.figure.savefig(join(output_dir, "contour.png"))
                 ax.clear()
-                ax: Axes = visualization.plot_parallel_coordinate(study)
+                ax: Axes = plot_parallel_coordinate(study)
                 ax.set_title("Parallel Coordinate Plot")
                 ax.figure.savefig(join(output_dir, "parallel_coordinate.png"))
                 ax.clear()
