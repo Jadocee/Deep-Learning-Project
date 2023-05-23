@@ -189,8 +189,8 @@ class LSTMClassifierOptimiser(BaseOptimiser):
         dropout=df['params_dropout'].astype(float)
         embedding_dim = df['params_embedding_dim'].astype(int)
 
-        models = list(zip(learning_rate, optimizer,
-                    max_tokens, epochs, batch_size))
+        models = list(zip(learning_rate, optimizer,n_layers,learning_rate_scheduler,hidden_size,bidirectional,
+                          dropout,embedding_dim, epochs, batch_size))
 
         models = pd.DataFrame({
             'learning_rate': learning_rate,
