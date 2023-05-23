@@ -11,7 +11,7 @@ from evaluate import EvaluationModule
 from numpy import ndarray, mean, concatenate
 from optuna import Trial, TrialPruned
 from sklearn.metrics import accuracy_score, precision_score, f1_score, recall_score, confusion_matrix, roc_auc_score, \
-    log_loss
+    log_loss, make_scorer
 from torch import no_grad, argmax, Tensor, FloatTensor
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
@@ -53,7 +53,7 @@ class PretrainedOptimiser(BaseOptimiser):
     def test_model(self, trial: FixedTrial) -> None:
         optimiser_name: str = trial.suggest_categorical("optimiser", ["AdamW", "Adam"])
         lr: float = trial.suggest_float("lr", 1e-6, 1e-4, log=True)
-        batch_size: int = trial.suggest_categorical("batch_size", [8])
+        batch_size: int = trial.suggest_int("batch_size", 8, 32, step=8)
         epochs: int = trial.suggest_categorical("epochs", [3, 5, 10])
         scheduler: str = trial.suggest_categorical("scheduler", ['linear', 'cosine', 'cosine_with_restarts',
                                                                  'polynomial', 'constant', 'constant_with_warmup',
@@ -64,13 +64,13 @@ class PretrainedOptimiser(BaseOptimiser):
             self.__pretrained_model_name, num_labels=6)
         optimiser: Optimizer = HyperParamUtils.define_optimiser(optimiser_name=optimiser_name,
                                                                 model_params=model.parameters(), learning_rate=lr)
-        num_training_steps: int = len(test_dataloader)
+        num_training_steps: int = len(train_dataloader) * epochs
         lr_scheduler = get_scheduler(name=scheduler, optimizer=optimiser, num_training_steps=num_training_steps,
                                      num_warmup_steps=1)
         model.to(self._device)
 
         progress_bar: tqdm = tqdm(range(num_training_steps), desc=f"Training {self.__pretrained_model_name}",
-                                  unit="epoch")
+                                  unit="epoch", leave=True, position=0)
         model.train()
         for epoch in range(epochs):
             for batch in train_dataloader:
@@ -84,8 +84,10 @@ class PretrainedOptimiser(BaseOptimiser):
                 progress_bar.update(1)
                 predictions: Tensor = argmax(outputs.logits, dim=-1)
 
+        progress_bar.close()
+        progress_bar = tqdm(range(len(test_dataloader)), desc=f"Testing {self.__pretrained_model_name}",
+                            unit="epoch", leave=True, position=0)
         model.eval()
-        progress_bar.set_description_str(f"Testing {self.__pretrained_model_name}")
         preds: ndarray = ndarray(shape=(0,), dtype=int)
         targets: ndarray = ndarray(shape=(0,), dtype=int)
         for batch in test_dataloader:
@@ -101,17 +103,36 @@ class PretrainedOptimiser(BaseOptimiser):
         save_path: str = join(STUDIES_DIR,
                               f"Test_{self.__pretrained_model_name}_{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}")
 
-        ResultsUtils.record_performance_scores(
-            scores={
-                "accuracy": accuracy_score(y_true=targets, y_pred=preds),
-                "precision": precision_score(y_true=targets, y_pred=preds, average="macro"),
-                "f1": f1_score(y_true=targets, y_pred=preds, average="macro"),
-                "recall": recall_score(y_true=targets, y_pred=preds, average="macro"),
-                "roc_auc": roc_auc_score(y_true=targets, y_score=preds),
-                "log_loss": log_loss(y_true=targets, y_pred=preds),
-            },
-            save_path=save_path
-        )
+        custom_score = make_scorer(roc_auc_score, multi_class="ovo", needs_proba=True)
+        auc_score: Optional[float] = None
+        try:
+            auc_score = custom_score(y_true=targets, y_score=preds)
+        except ValueError:
+            pass
+
+        if auc_score is not None:
+            ResultsUtils.record_performance_scores(
+                scores={
+                    "accuracy": accuracy_score(y_true=targets, y_pred=preds),
+                    "precision": precision_score(y_true=targets, y_pred=preds, average="macro"),
+                    "f1": f1_score(y_true=targets, y_pred=preds, average="macro"),
+                    "recall": recall_score(y_true=targets, y_pred=preds, average="macro"),
+                    "roc_auc": custom_score(y_true=targets, y_score=preds),
+                    "log_loss": log_loss(y_true=targets, y_pred=preds),
+                },
+                save_path=save_path
+            )
+        else:
+            ResultsUtils.record_performance_scores(
+                scores={
+                    "accuracy": accuracy_score(y_true=targets, y_pred=preds),
+                    "precision": precision_score(y_true=targets, y_pred=preds, average="macro"),
+                    "f1": f1_score(y_true=targets, y_pred=preds, average="macro"),
+                    "recall": recall_score(y_true=targets, y_pred=preds, average="macro"),
+                    "log_loss": log_loss(y_true=targets, y_pred=preds),
+                },
+                save_path=save_path
+            )
 
         ResultsUtils.plot_confusion_matrix(
             cm=confusion_matrix(y_true=targets, y_pred=preds),

@@ -1,11 +1,11 @@
 from os import system, name
 from os.path import exists, join
 from pathlib import Path
-from typing import Dict, List, Final
+from typing import Dict, List, Final, Any
 import torch
 
 from optuna.trial import FixedTrial
-from pandas import read_csv, DataFrame
+from pandas import read_csv, DataFrame, Series
 from pandas._testing import loc
 from torch.cuda import is_available as has_cuda, empty_cache
 
@@ -226,10 +226,18 @@ class Main:
                                         device=Main.DEVICE).run(2)
                 elif choice == 2:
                     df: DataFrame = \
-                        read_csv(join(STUDIES_DIR, "PretrainedOptimiser_2023-05-23_16-09-28", "results.csv"))
-                    best_trial = loc(df["value"].idxmax())
-                    param_dict = best_trial.filter(like="param_").to_dict()
-                    param_dict = {key.replace("param_", ""): value for key, value in param_dict.items()}
+                        read_csv(join(STUDIES_DIR, "PretrainedOptimiser_2023-05-23_16-09-28", "results.csv")) \
+                        .sort_values(by="value", ascending=False) \
+                        .head(1)
+                    best_trial_row: Series = df.iloc[0]
+                    param_dict: Dict[str, Any] = dict()
+                    param_dict.update({
+                        "lr": best_trial_row["params_lr"].astype(float),
+                        "epochs": best_trial_row["params_epochs"].astype(int),
+                        "batch_size": best_trial_row["params_batch_size"].astype(int),
+                        "optimiser": best_trial_row["params_optimiser"],
+                        "scheduler": best_trial_row["params_scheduler"],
+                    })
                     trial: FixedTrial = FixedTrial(param_dict)
                     PretrainedOptimiser(model_name="cardiffnlp/twitter-roberta-base-dec2021-tweet-topic-single-all",
                                         device=Main.DEVICE).test_model(trial)
