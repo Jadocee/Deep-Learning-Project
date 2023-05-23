@@ -3,7 +3,6 @@ from typing import Tuple, Optional, List
 
 import evaluate
 import torch
-from datasets import DatasetDict
 from evaluate import EvaluationModule
 from numpy import ndarray, mean, concatenate
 from optuna import Trial, TrialPruned
@@ -17,6 +16,7 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification, get_
     RobertaForSequenceClassification
 from transformers.modeling_outputs import SequenceClassifierOutput
 
+from datasets import DatasetDict
 from optimisers.base_optimiser import BaseOptimiser
 from utils.dataset_loader import DatasetLoader
 from utils.definitions import STUDIES_DIR

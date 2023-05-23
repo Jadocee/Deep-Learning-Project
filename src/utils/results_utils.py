@@ -4,10 +4,8 @@ from typing import List, Dict
 
 from matplotlib import pyplot as plt
 from numpy import ndarray
-from pandas import read_csv, DataFrame
+from pandas import DataFrame
 from seaborn import heatmap
-
-from utils.definitions import STUDIES_DIR
 
 
 class ResultsUtils:
