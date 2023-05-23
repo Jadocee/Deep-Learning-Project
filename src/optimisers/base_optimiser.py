@@ -225,15 +225,13 @@ class BaseOptimiser(ABC):
         References:
             - https://optuna.readthedocs.io/en/stable/reference/generated/optuna.pruners.HyperbandPruner.html
         """
-        # self._progress_bar = tqdm(range(n_trials), desc="Hyperparameter optimisation", unit="trial")
-        # self._progress_bar.set_description_str("Initialising...")
+
         study: Study = create_study(
             direction=StudyDirection.MAXIMIZE,
             study_name=f"{self.__class__.__name__}_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}",
             pruner=HyperbandPruner(min_resource=3, max_resource="auto", reduction_factor=3)
         )
         try:
-            # self._progress_bar.set_description_str("Starting hyperparameter optimisation...")
             study.optimize(self._objective, n_trials=n_trials, gc_after_trial=True)
             pruned_trials: List[FrozenTrial] = study.get_trials(deepcopy=False, states=[TrialState.PRUNED])
             complete_trials: List[FrozenTrial] = study.get_trials(deepcopy=False, states=[TrialState.COMPLETE])
