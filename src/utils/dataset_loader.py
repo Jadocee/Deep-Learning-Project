@@ -6,7 +6,7 @@ from typing import Dict, Final
 from torchvision.transforms import Compose, RandomResizedCrop, RandomHorizontalFlip, ToTensor, Resize
 
 from datasets import load_dataset, Dataset, DatasetDict, load_from_disk
-from datasets.cnn_custom_dataset import CustomDataset
+from datasets.cnn_custom_dataset import CNNCustomDataset
 from utils.definitions import DATA_DIR
 
 
@@ -37,12 +37,12 @@ class DatasetLoader:
         raise Exception("This class should not be instantiated.")
 
     @staticmethod
-    def get_intel_image_classification_dataset() -> Dict[str, CustomDataset]:
+    def get_intel_image_classification_dataset() -> Dict[str, CNNCustomDataset]:
         """
         Load the Intel Image Classification dataset.
 
         Returns:
-            Dict[str, CustomDataset]: A dictionary containing the training, validation, and testing sets.
+            Dict[str, CNNCustomDataset]: A dictionary containing the training, validation, and testing sets.
 
         Notes:
             - If the dataset is not found in the data directory, it will be downloaded from Kaggle; the Kaggle API
@@ -80,12 +80,12 @@ class DatasetLoader:
             ToTensor()
         ])
 
-        train_dataset: CustomDataset = CustomDataset(data_dir=join(dataset_path, "seg_train", "seg_train"),
-                                                     transform=train_transforms)
-        valid_dataset: CustomDataset = CustomDataset(data_dir=join(dataset_path, "seg_test", "seg_test"),
-                                                     transform=eval_transforms)
-        test_dataset: CustomDataset = CustomDataset(data_dir=join(dataset_path, "seg_pred", "seg_pred"),
-                                                    transform=eval_transforms)
+        train_dataset: CNNCustomDataset = CNNCustomDataset(data_dir=join(dataset_path, "seg_train", "seg_train"),
+                                                           transform=train_transforms)
+        valid_dataset: CNNCustomDataset = CNNCustomDataset(data_dir=join(dataset_path, "seg_test", "seg_test"),
+                                                           transform=eval_transforms)
+        test_dataset: CNNCustomDataset = CNNCustomDataset(data_dir=join(dataset_path, "seg_pred", "seg_pred"),
+                                                          transform=eval_transforms)
 
         return {
             "train": train_dataset,

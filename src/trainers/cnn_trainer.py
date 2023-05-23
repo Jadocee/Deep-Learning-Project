@@ -19,7 +19,7 @@ from torch.optim import Adam
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
-from datasets.cnn_custom_dataset import CustomDataset
+from datasets.cnn_custom_dataset import CNNCustomDataset
 from models.resnet_model import ResNet18, Resblock
 from utils.cnn_utils import CNNUtils
 
@@ -109,16 +109,16 @@ class Trainer:
             [transforms.Resize(size=(150, 150)), transforms.ToTensor()]
         )
 
-        self.train_data = CustomDataset(
+        self.train_data = CNNCustomDataset(
             "Deep-Learning-Project\data\intel_image_classification_dataset\seg_train\seg_train",
             transform=train_transforms,
         )
 
-        self.valid_data = CustomDataset(
+        self.valid_data = CNNCustomDataset(
             "Deep-Learning-Project\data\intel_image_classification_dataset\seg_test\seg_test",
             transform=eval_transforms,
         )
-        self.test_data = CustomDataset(
+        self.test_data = CNNCustomDataset(
             "Deep-Learning-Project\data\mock_test",
             transform=eval_transforms,
         )

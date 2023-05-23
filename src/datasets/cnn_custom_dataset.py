@@ -17,7 +17,7 @@ from PIL import Image
 from torch.utils.data import Dataset
 
 
-class CustomDataset(Dataset):
+class CNNCustomDataset(Dataset):
     """
     Custom dataset class for loading images and labels from a directory.
 
