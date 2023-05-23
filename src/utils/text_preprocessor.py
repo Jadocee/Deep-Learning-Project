@@ -6,12 +6,13 @@ from typing import Set, Optional, List, Iterable
 
 import contractions
 import torch
-from datasets import DatasetDict, Dataset
 from nltk import word_tokenize, WordNetLemmatizer, PorterStemmer, download
 from nltk.corpus import stopwords
 from numpy import zeros, ndarray, vstack
 from torchtext.vocab import Vocab, build_vocab_from_iterator
+from transformers import AutoTokenizer
 
+from datasets import DatasetDict, Dataset
 from utils.definitions import VOCABS_DIR
 
 
@@ -319,7 +320,7 @@ class TextPreprocessor:
 
         return [self.vocabularise(tokens) for tokens in batch]
 
-    def multi_hot_encode(self, tokens: List[str]) -> ndarray:
+    def multi_hot_encode(self, tokens: List[int]) -> ndarray:
         """
         Encodes a list of tokens into a multi-hot vector.
 
@@ -334,7 +335,7 @@ class TextPreprocessor:
             raise ValueError("No vocabulary has been created. Please create a vocabulary before encoding.")
 
         encoded: ndarray = zeros(len(self.__vocab), dtype=int)
-        encoded[[self.__vocab[token] for token in tokens]] = 1
+        encoded[[token for token in tokens if token < len(self.__vocab)]] = 1
         return encoded
 
     def one_hot_encode(self, tokens: List[str]) -> ndarray:
@@ -358,6 +359,18 @@ class TextPreprocessor:
         elif self.__encoding_method == "one-hot":
             return vstack([self.one_hot_encode(tokens) for tokens in batch])
 
+    def preprocess_pretrained_dataset_dict(self,
+                                           dataset_dict: DatasetDict[str, Dataset],
+                                           pre_trained_model_name: str,
+                                           column: str = "text",
+                                           inplace: bool = True) -> DatasetDict[str, Dataset]:
+        tokeniser = AutoTokenizer.from_pretrained(pre_trained_model_name)
+        dataset_dict = dataset_dict.map(
+            function=lambda example: {"tokens": tokeniser(example[column], padding="max_length", truncation=True)},
+            remove_columns=[column] if inplace else None,
+            batched=True
+        )
+
     def preprocess_dataset_dict(self,
                                 dataset_dict: DatasetDict[str, Dataset],
                                 column: str = "text",
@@ -365,11 +378,11 @@ class TextPreprocessor:
                                 create_vocab: bool = True,
                                 vocab_name: Optional[str] = None) -> DatasetDict[str, Dataset]:
         """
-        Preprocesses a DatasetDict of train, validation and test datasets that contain a column named "text".
+        Preprocesses a DatasetDict of train, validation and test custom_datasets that contain a column named "text".
 
         This method will standardise the text in the "text" column and then vocabularise the standardised text using
         the vocabulary created by the `create_vocab` method. If a vocabulary has not been created, this method will
-        create one using the "train" and "validation" datasets.
+        create one using the "train" and "validation" custom_datasets.
 
         The vocabularised tokens are stored in a new column named "ids", and the original specified column is removed.
 
@@ -378,11 +391,11 @@ class TextPreprocessor:
 
         Notes:
             - This method assumes that if the `__vocab` attribute is None, then a vocabulary has not been created and
-              therefore the "train" and "validation" datasets will be used to create the vocabulary. Realistically,
+              therefore the "train" and "validation" custom_datasets will be used to create the vocabulary. Realistically,
               the "test" dataset should not be used to create the vocabulary, as this would introduce a bias into the
               model.
             - If a vocabulary has not been created, this method will create one using the "train" and "validation"
-              datasets.
+              custom_datasets.
             - The vocabulary is saved to a file in the output directory.
 
         Args:
@@ -421,10 +434,27 @@ class TextPreprocessor:
         )
 
         if self.__encode:
-            dataset_dict = dataset_dict.map(
-                lambda example: {"ids": self.encode_batch(example["ids"])},
-                batched=True
-            )
+            # dataset_dict = dataset_dict.map(
+            #     lambda example: {"ids": self.encode_batch(example["ids"])},
+            #     batched=True
+            # )
+
+            train_data = dataset_dict["train"]
+            val_data = dataset_dict["validation"]
+            test_data = dataset_dict["test"]
+
+            def multi_hot(example, num_classes):
+                encoded = zeros((num_classes,))
+                encoded[example["ids"]] = 1
+                return {"multi_hot": encoded}
+
+            train_data = train_data.map(multi_hot, fn_kwargs={"num_classes": len(self.__vocab)})
+            val_data = val_data.map(multi_hot, fn_kwargs={"num_classes": len(self.__vocab)})
+            test_data = test_data.map(multi_hot, fn_kwargs={"num_classes": len(self.__vocab)})
+
+            dataset_dict["train"] = train_data
+            dataset_dict["validation"] = val_data
+            dataset_dict["test"] = test_data
 
         dataset_dict.set_format(type="torch", columns=["ids", "label"])
         return dataset_dict

@@ -1,10 +1,10 @@
 from typing import Tuple
 
-from datasets import DatasetDict
 from optuna import Trial
 from torch.utils.data import DataLoader
 from torchtext.vocab import Vocab
 
+from datasets import DatasetDict
 from models.bow_model import BOWModel
 from optimisers.base_optimiser import BaseOptimiser
 from trainers.bow_classifier_trainer import BOWClassifierTrainer
@@ -20,7 +20,7 @@ class BOWClassifierOptimiser(BaseOptimiser):
 
     def _prepare_data(self, batch_size: int, max_tokens: int) -> Tuple[DataLoader, DataLoader, DataLoader]:
         # TODO: Move to utility class
-        # TODO: Make this reusable for other datasets
+        # TODO: Make this reusable for other custom_datasets
 
         dataset_dict: DatasetDict = DatasetLoader.get_tweet_topic_single_dataset()
         preprocessor: TextPreprocessor = TextPreprocessor(encode=True, encoding_method="multi-hot",
