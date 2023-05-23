@@ -1,10 +1,10 @@
 from typing import Tuple
 
-from datasets import DatasetDict
 from optuna import Trial
 from torch.utils.data import DataLoader
 from torchtext.vocab import Vocab
 
+from datasets import DatasetDict
 from models.bow_model import BOWModel
 from optimisers.base_optimiser import BaseOptimiser
 from trainers.bow_classifier_trainer import BOWClassifierTrainer

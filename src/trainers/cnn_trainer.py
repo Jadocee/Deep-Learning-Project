@@ -19,9 +19,9 @@ from torch.optim import Adam
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
+from datasets.cnn_custom_dataset import CustomDataset
 from models.resnet_model import ResNet18, Resblock
-from utils.cnn_custom_dataset import CustomDataset
-from utils.cnn_util import CNNUtils
+from utils.cnn_utils import CNNUtils
 
 
 class Trainer:

@@ -1,7 +1,7 @@
 out/
 data/intel_image_classification_dataset/
 data/tweet_topic_single/
-
+data/test/
 
 
 # Byte-compiled / optimized / DLL files
