@@ -444,7 +444,7 @@ class TextPreprocessor:
             test_data = dataset_dict["test"]
 
             def multi_hot(example, num_classes):
-                encoded = zeros((num_classes, ))
+                encoded = zeros((num_classes,))
                 encoded[example["ids"]] = 1
                 return {"multi_hot": encoded}
 

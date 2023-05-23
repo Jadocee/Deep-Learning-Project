@@ -101,7 +101,6 @@ class Main:
             print("0. Main Menu")
         print("-1. Exit", end="\n\n")
 
-
     @staticmethod
     def __switch_menu():
         """

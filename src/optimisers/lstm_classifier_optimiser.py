@@ -105,8 +105,6 @@ class LSTMClassifierOptimiser(BaseOptimiser):
         Returns:
             float: The accuracy of the model on the validation set.
         """
-        self._logger.info(f"Trial number: {trial.number}")
-
         epochs: int = trial.suggest_categorical("epochs", [5, 10])
         learning_rate: float = trial.suggest_float("learning_rate", 1e-6, 1e-1, log=True)
         batch_size: int = trial.suggest_categorical("batch_size", [32, 64, 128, 256])
@@ -121,9 +119,8 @@ class LSTMClassifierOptimiser(BaseOptimiser):
             dropout: float = trial.suggest_float("dropout", 0.0, 0.0)
         scheduler_hyperparams: Optional[Dict[str, Any]] = self._define_scheduler_hyperparams(trial)
 
-        self._logger.info(f"Selected hyperparameters: {trial.params.__str__()}")
-
         train_dataloader, valid_dataloader, test_dataloader = self._prepare_data(batch_size=batch_size, max_tokens=1000)
+
         model: LSTMModel = LSTMModel(
             vocab_size=len(self.__vocab),
             embedding_dim=embedding_dim,
@@ -135,6 +132,7 @@ class LSTMClassifierOptimiser(BaseOptimiser):
             pad_idx=self.__vocab["<pad>"],
             device=self._device
         )
+
         trainer = LSTMClassifierTrainer(
             train_dataloader=train_dataloader,
             valid_dataloader=valid_dataloader,
@@ -142,6 +140,7 @@ class LSTMClassifierOptimiser(BaseOptimiser):
             vocab=self.__vocab,
             device=self._device
         )
+
         results: Dict[str, Any] = trainer.fit(
             model=model,
             learning_rate=learning_rate,
@@ -151,6 +150,7 @@ class LSTMClassifierOptimiser(BaseOptimiser):
             optimiser_name=optimiser_name,
             lr_scheduler_params=scheduler_hyperparams
         )
+
         save_path: str = join(STUDIES_DIR, trial.study.study_name, f"trial_{trial.number}_{model.get_id()}")
         trial.set_user_attr(key="save_path", value=save_path)
         ResultsUtils.plot_loss_and_accuracy_curves(
@@ -161,5 +161,4 @@ class LSTMClassifierOptimiser(BaseOptimiser):
             save_path=save_path
         )
         ResultsUtils.plot_confusion_matrix(cm=results["confusion_matrix"], save_path=save_path)
-
         return results["valid_accuracies"][-1]
