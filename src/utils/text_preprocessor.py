@@ -10,6 +10,7 @@ from nltk import word_tokenize, WordNetLemmatizer, PorterStemmer, download
 from nltk.corpus import stopwords
 from numpy import zeros, ndarray, vstack
 from torchtext.vocab import Vocab, build_vocab_from_iterator
+from transformers import AutoTokenizer
 
 from datasets import DatasetDict, Dataset
 from utils.definitions import VOCABS_DIR
@@ -319,7 +320,7 @@ class TextPreprocessor:
 
         return [self.vocabularise(tokens) for tokens in batch]
 
-    def multi_hot_encode(self, tokens: List[str]) -> ndarray:
+    def multi_hot_encode(self, tokens: List[int]) -> ndarray:
         """
         Encodes a list of tokens into a multi-hot vector.
 
@@ -334,7 +335,7 @@ class TextPreprocessor:
             raise ValueError("No vocabulary has been created. Please create a vocabulary before encoding.")
 
         encoded: ndarray = zeros(len(self.__vocab), dtype=int)
-        encoded[[self.__vocab[token] for token in tokens]] = 1
+        encoded[[token for token in tokens if token < len(self.__vocab)]] = 1
         return encoded
 
     def one_hot_encode(self, tokens: List[str]) -> ndarray:
@@ -357,6 +358,18 @@ class TextPreprocessor:
             return vstack([self.multi_hot_encode(tokens) for tokens in batch])
         elif self.__encoding_method == "one-hot":
             return vstack([self.one_hot_encode(tokens) for tokens in batch])
+
+    def preprocess_pretrained_dataset_dict(self,
+                                           dataset_dict: DatasetDict[str, Dataset],
+                                           pre_trained_model_name: str,
+                                           column: str = "text",
+                                           inplace: bool = True) -> DatasetDict[str, Dataset]:
+        tokeniser = AutoTokenizer.from_pretrained(pre_trained_model_name)
+        dataset_dict = dataset_dict.map(
+            function=lambda example: {"tokens": tokeniser(example[column], padding="max_length", truncation=True)},
+            remove_columns=[column] if inplace else None,
+            batched=True
+        )
 
     def preprocess_dataset_dict(self,
                                 dataset_dict: DatasetDict[str, Dataset],
@@ -421,10 +434,27 @@ class TextPreprocessor:
         )
 
         if self.__encode:
-            dataset_dict = dataset_dict.map(
-                lambda example: {"ids": self.encode_batch(example["ids"])},
-                batched=True
-            )
+            # dataset_dict = dataset_dict.map(
+            #     lambda example: {"ids": self.encode_batch(example["ids"])},
+            #     batched=True
+            # )
+
+            train_data = dataset_dict["train"]
+            val_data = dataset_dict["validation"]
+            test_data = dataset_dict["test"]
+
+            def multi_hot(example, num_classes):
+                encoded = zeros((num_classes,))
+                encoded[example["ids"]] = 1
+                return {"multi_hot": encoded}
+
+            train_data = train_data.map(multi_hot, fn_kwargs={"num_classes": len(self.__vocab)})
+            val_data = val_data.map(multi_hot, fn_kwargs={"num_classes": len(self.__vocab)})
+            test_data = test_data.map(multi_hot, fn_kwargs={"num_classes": len(self.__vocab)})
+
+            dataset_dict["train"] = train_data
+            dataset_dict["validation"] = val_data
+            dataset_dict["test"] = test_data
 
         dataset_dict.set_format(type="torch", columns=["ids", "label"])
         return dataset_dict

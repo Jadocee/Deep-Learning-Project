@@ -10,6 +10,7 @@ from torch.nn import Module
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LRScheduler, ReduceLROnPlateau
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 from models.base_model import BaseModel
 from utils.hyperparam_utils import HyperParamUtils
@@ -64,7 +65,8 @@ class BaseTrainer(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def _evaluate(self, model: BaseModel, dataloader: DataLoader) -> Tuple[float64, float64, ndarray, ndarray]:
+    def _evaluate(self, model: BaseModel, dataloader: DataLoader) -> Tuple[
+        float64, float64, ndarray, ndarray]:
         """
         Evaluate the model.
 
@@ -137,6 +139,8 @@ class BaseTrainer(ABC):
         if (learning_rate < 0.0) or (not isinstance(learning_rate, float)):
             raise ValueError(f"Invalid learning rate: {learning_rate}")
 
+        num_training_steps: int = len(self._train_dataloader) * epochs
+        progress_bar: tqdm = tqdm(range(num_training_steps), unit="epoch", desc=f"Training model {model.get_id()}")
         optimiser: Optimizer = HyperParamUtils.define_optimiser(
             optimiser_name=optimiser_name,
             model_params=model.get_parameters(),
@@ -155,13 +159,12 @@ class BaseTrainer(ABC):
         valid_accuracies: List[float] = list()
         all_predictions: ndarray = ndarray(shape=(0,), dtype=int)
         all_labels: ndarray = ndarray(shape=(0,), dtype=int)
-
-        print(f"Training model {model.get_id()} for {epochs} epochs...")
         accumulated_time: float = 0.0
         for epoch in range(epochs):
             t_start: float = time()
             train_loss, train_acc = self._train(model=model, optimiser=optimiser)
             valid_loss, valid_acc, predictions, targets = self._evaluate(model=model, dataloader=self._valid_dataloader)
+            progress_bar.update(1)
             accumulated_time += time() - t_start
             train_losses.append(train_loss)
             train_accuracies.append(train_acc)
@@ -176,7 +179,6 @@ class BaseTrainer(ABC):
                     raise TrialPruned()
 
             message: str = ""
-
             if len(valid_losses) > 3:
                 if valid_losses[-1] > valid_losses[-2] and valid_losses[-1] > valid_losses[-3] \
                         and valid_losses[-1] > valid_losses[-4]:
@@ -194,8 +196,7 @@ class BaseTrainer(ABC):
                 scheduler.step(valid_loss) if isinstance(scheduler, ReduceLROnPlateau) else scheduler.step()
 
         model.set_trained()
-        print(f"Finished training {model.get_id()} in {accumulated_time}s.")
-
+        progress_bar.close()
         return {
             "train_losses": train_losses,
             "train_accuracies": train_accuracies,
