@@ -1,9 +1,9 @@
 # Author: Thomas Bandy
 #
-# This script contains utility functions for analyzing and visualizing datasets and model performance using matplotlib.
+# This script contains utility functions for analyzing and visualizing custom_datasets and model performance using matplotlib.
 #
 # Functions: - print_checks(train_data, valid_data, test_data, train_loader, valid_loader, test_loader): Prints
-# various checks and information about the datasets and loaders. - picture_diagram(data, grid_size): Displays a
+# various checks and information about the custom_datasets and loaders. - picture_diagram(data, grid_size): Displays a
 # picture diagram using matplotlib with titles corresponding to different classes. - loss_acc_diagram(train_losses,
 # val_losses, train_accs, val_accs): Displays a diagram showing the training and validation losses and accuracies
 # over epochs.
@@ -19,7 +19,7 @@ class CNNUtils:
             train_data, valid_data, test_data, train_loader, valid_loader, test_loader
     ):
         """
-        Prints various checks and information about the datasets and loaders.
+        Prints various checks and information about the custom_datasets and loaders.
 
         Args:
             train_data (Dataset): Training dataset.
@@ -35,7 +35,7 @@ class CNNUtils:
             - Shape of the first element in the valid_data dataset.
 
         Note:
-            This function assumes that the datasets are compatible with the data loaders.
+            This function assumes that the custom_datasets are compatible with the data loaders.
         """
         # Check our dataset sizes
         print("Train: {} examples".format(len(train_data)))

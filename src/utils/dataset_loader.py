@@ -6,13 +6,13 @@ from typing import Dict, Final
 from torchvision.transforms import Compose, RandomResizedCrop, RandomHorizontalFlip, ToTensor, Resize
 
 from datasets import load_dataset, Dataset, DatasetDict, load_from_disk
-from datasets.cnn_custom_dataset import CNNCustomDataset
+from custom_datasets.cnn_custom_dataset import CNNCustomDataset
 from utils.definitions import DATA_DIR
 
 
 class DatasetLoader:
     """
-    A static utility class responsible for loading datasets. This class should not be instantiated.
+    A static utility class responsible for loading custom_datasets. This class should not be instantiated.
 
     Attributes:
         TWEET_TOPIC_SINGLE (Final[str]): The name of the Tweet Topic Single dataset.

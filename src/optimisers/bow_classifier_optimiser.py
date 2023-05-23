@@ -20,7 +20,7 @@ class BOWClassifierOptimiser(BaseOptimiser):
 
     def _prepare_data(self, batch_size: int, max_tokens: int) -> Tuple[DataLoader, DataLoader, DataLoader]:
         # TODO: Move to utility class
-        # TODO: Make this reusable for other datasets
+        # TODO: Make this reusable for other custom_datasets
 
         dataset_dict: DatasetDict = DatasetLoader.get_tweet_topic_single_dataset()
         preprocessor: TextPreprocessor = TextPreprocessor(encode=True, encoding_method="multi-hot",

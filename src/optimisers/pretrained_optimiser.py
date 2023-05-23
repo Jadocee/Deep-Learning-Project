@@ -1,8 +1,12 @@
+from datetime import datetime
 from os.path import join
 from typing import Tuple, Optional, List
 
 import evaluate
 import torch
+from optuna.trial import FixedTrial
+
+from datasets import DatasetDict
 from evaluate import EvaluationModule
 from numpy import ndarray, mean, concatenate
 from optuna import Trial, TrialPruned
@@ -16,7 +20,6 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification, get_
     RobertaForSequenceClassification
 from transformers.modeling_outputs import SequenceClassifierOutput
 
-from datasets import DatasetDict
 from optimisers.base_optimiser import BaseOptimiser
 from utils.dataset_loader import DatasetLoader
 from utils.definitions import STUDIES_DIR
@@ -27,7 +30,7 @@ from utils.results_utils import ResultsUtils
 class PretrainedOptimiser(BaseOptimiser):
     __pretrained_model_name: str
 
-    def __init__(self, model_name: str, device: str = "cpu", ):
+    def __init__(self, model_name: str, device: str = "cpu"):
         super().__init__(device=device)
         self.__pretrained_model_name = model_name
 
@@ -47,7 +50,7 @@ class PretrainedOptimiser(BaseOptimiser):
         test_dataloader = DataLoader(dataset_dict["test"], batch_size=batch_size)
         return train_dataloader, valid_dataloader, test_dataloader
 
-    def test_model(self, trial: Trial) -> None:
+    def test_model(self, trial: FixedTrial) -> None:
         optimiser_name: str = trial.suggest_categorical("optimiser", ["AdamW", "Adam"])
         lr: float = trial.suggest_float("lr", 1e-6, 1e-4, log=True)
         batch_size: int = trial.suggest_categorical("batch_size", [8])
@@ -68,8 +71,8 @@ class PretrainedOptimiser(BaseOptimiser):
 
         progress_bar: tqdm = tqdm(range(num_training_steps), desc=f"Training {self.__pretrained_model_name}",
                                   unit="epoch")
+        model.train()
         for epoch in range(epochs):
-            model.train()
             for batch in train_dataloader:
                 batch = {k: v.to(self._device) for k, v in batch.items()}
                 outputs: SequenceClassifierOutput = model(**batch)
@@ -95,7 +98,8 @@ class PretrainedOptimiser(BaseOptimiser):
             preds = concatenate((preds, predictions.cpu().numpy()))
             targets = concatenate((targets, batch["labels"].cpu().numpy()))
 
-        save_path: str = join(STUDIES_DIR, trial.study.study_name)
+        save_path: str = join(STUDIES_DIR,
+                              f"Test_{self.__pretrained_model_name}_{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}")
 
         ResultsUtils.record_performance_scores(
             scores={

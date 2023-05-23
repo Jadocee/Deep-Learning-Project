@@ -19,7 +19,7 @@ from torch.optim import Adam
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
-from datasets.cnn_custom_dataset import CNNCustomDataset
+from custom_datasets.cnn_custom_dataset import CNNCustomDataset
 from models.resnet_model import ResNet18, Resblock
 from utils.cnn_utils import CNNUtils
 

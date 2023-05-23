@@ -1,8 +1,11 @@
 from os import system, name
-from os.path import exists
+from os.path import exists, join
 from pathlib import Path
 from typing import Dict, List, Final
 
+from optuna.trial import FixedTrial
+from pandas import read_csv, DataFrame
+from pandas._testing import loc
 from torch.cuda import is_available as has_cuda, empty_cache
 
 from optimisers.bow_classifier_optimiser import BOWClassifierOptimiser
@@ -55,7 +58,8 @@ class Main:
             "Run Bag Of Words 1",
         ],
         "Fine-Tune Pre-Trained Model Menu": [
-            "cardiffnlp/twitter-roberta-base-dec2021-tweet-topic-single-all",
+            "Fine-tune cardiffnlp/twitter-roberta-base-dec2021-tweet-topic-single-all",
+            "Test cardiffnlp/twitter-roberta-base-dec2021-tweet-topic-single-all",
         ]
     }
 
@@ -193,6 +197,15 @@ class Main:
                 elif choice == 1:
                     PretrainedOptimiser(model_name="cardiffnlp/twitter-roberta-base-dec2021-tweet-topic-single-all",
                                         device=Main.DEVICE).run(2)
+                elif choice == 2:
+                    df: DataFrame = \
+                        read_csv(join(STUDIES_DIR, "PretrainedOptimiser_2023-05-23_16-09-28", "results.csv"))
+                    best_trial = loc(df["value"].idxmax())
+                    param_dict = best_trial.filter(like="param_").to_dict()
+                    param_dict = {key.replace("param_", ""): value for key, value in param_dict.items()}
+                    trial: FixedTrial = FixedTrial(param_dict)
+                    PretrainedOptimiser(model_name="cardiffnlp/twitter-roberta-base-dec2021-tweet-topic-single-all",
+                                        device=Main.DEVICE).test_model(trial)
                 else:
                     print("Invalid choice. Try again.")
                     system("cls" if name == "nt" else "clear")

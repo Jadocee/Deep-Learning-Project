@@ -378,11 +378,11 @@ class TextPreprocessor:
                                 create_vocab: bool = True,
                                 vocab_name: Optional[str] = None) -> DatasetDict[str, Dataset]:
         """
-        Preprocesses a DatasetDict of train, validation and test datasets that contain a column named "text".
+        Preprocesses a DatasetDict of train, validation and test custom_datasets that contain a column named "text".
 
         This method will standardise the text in the "text" column and then vocabularise the standardised text using
         the vocabulary created by the `create_vocab` method. If a vocabulary has not been created, this method will
-        create one using the "train" and "validation" datasets.
+        create one using the "train" and "validation" custom_datasets.
 
         The vocabularised tokens are stored in a new column named "ids", and the original specified column is removed.
 
@@ -391,11 +391,11 @@ class TextPreprocessor:
 
         Notes:
             - This method assumes that if the `__vocab` attribute is None, then a vocabulary has not been created and
-              therefore the "train" and "validation" datasets will be used to create the vocabulary. Realistically,
+              therefore the "train" and "validation" custom_datasets will be used to create the vocabulary. Realistically,
               the "test" dataset should not be used to create the vocabulary, as this would introduce a bias into the
               model.
             - If a vocabulary has not been created, this method will create one using the "train" and "validation"
-              datasets.
+              custom_datasets.
             - The vocabulary is saved to a file in the output directory.
 
         Args:
