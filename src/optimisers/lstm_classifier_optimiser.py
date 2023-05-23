@@ -221,7 +221,7 @@ class LSTMClassifierOptimiser(BaseOptimiser):
             dropout = row['dropout']
             embedding_dim = row['embedding_dim']
 
-            train_dataloader, valid_dataloader, test_dataloader = self._prepare_data(batch_size=batch_size, max_tokens=tokens)
+            train_dataloader, valid_dataloader, test_dataloader = self._prepare_data(batch_size=batch_size, max_tokens=1000)
            
             model: LSTMModel = LSTMModel(
             vocab_size=len(self.__vocab),
