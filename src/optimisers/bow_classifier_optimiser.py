@@ -1,6 +1,6 @@
 import csv
 from itertools import chain
-from typing import Tuple, Union
+from typing import Any, Dict, Optional, Tuple, Union
 
 from nltk.lm import Vocabulary
 from numpy import mean
@@ -19,6 +19,7 @@ from utils.definitions import STUDIES_DIR
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+from utils.results_utils import ResultsUtils
 
 from utils.text_preprocessor import TextPreprocessor
 
@@ -52,15 +53,15 @@ class BOWClassifierOptimiser(BaseOptimiser):
 
     def _objective(self, trial: Trial) -> float:
         # Suggestions for hyperparameters
-
         epochs: int = trial.suggest_categorical("epochs", [5, 10, 20])
         learning_rate: float = trial.suggest_float(
-            "learning_rate", 1e-6, 1e-1, log=True)
+            "learning_rate", 1e-5, 1e-1, log=True)
         batch_size: int = trial.suggest_categorical("batch_size", [8, 32, 64])
         max_tokens: int = trial.suggest_categorical(
             "max_tokens", [100, 200, 300, 400, 500, 600])
         optimiser_name: str = trial.suggest_categorical(
             "optimiser", ["Adam", "RMSprop", "SGD", "Adagrad"])
+        scheduler_hyperparams: Optional[Dict[str, Any]] = self._define_scheduler_hyperparams(trial)
 
         # Load and preprocess the data
         train_dataloader, valid_dataloader, test_dataloader = self._prepare_data(batch_size=batch_size,
@@ -81,17 +82,28 @@ class BOWClassifierOptimiser(BaseOptimiser):
             device=self._device,
         )
 
-        # Train the model
-        accuracy,loss  = trainer.run(
+        results: Dict[str, Any] = trainer.fit(
             model=model,
             learning_rate=learning_rate,
             epochs=epochs,
+            batch_size=batch_size,
+            trial=trial,
             optimiser_name=optimiser_name,
-            # lr_scheduler_name=lr_scheduler_name,
-            # kwargs=kwargs
+            lr_scheduler_params=scheduler_hyperparams
         )
+        
+        save_path: str = join(STUDIES_DIR, trial.study.study_name, f"trial_{trial.number}_{model.get_id()}")
+        ResultsUtils.plot_loss_and_accuracy_curves(
+            training_losses=results["train_losses"],
+            validation_losses=results["valid_losses"],
+            training_accuracies=results["train_accuracies"],
+            validation_accuracies=results["valid_accuracies"],
+            save_path=save_path
+        )
+        ResultsUtils.plot_confusion_matrix(cm=results["confusion_matrix"], save_path=save_path)
 
-        return accuracy
+        return results["valid_accuracies"][-1]
+
 
     def validate(self, study_name):
         output_dir: str = join(STUDIES_DIR, study_name)

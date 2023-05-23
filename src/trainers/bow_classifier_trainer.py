@@ -17,7 +17,7 @@ from utils.hyperparam_utils import HyperParamUtils
 
 
 class BOWClassifierTrainer(BaseTrainer):
-
+    __vocab: Vocab
     def save(self):
         raise NotImplementedError
 
@@ -34,6 +34,8 @@ class BOWClassifierTrainer(BaseTrainer):
     def _evaluate(self,model:BOWModel, dataloader, loss_fn = CrossEntropyLoss()):
         model.eval()
         losses, accuracies = [], []
+        predictions: np.ndarray = np.ndarray(shape=(0,), dtype=int)
+        targets: np.ndarray = np.ndarray(shape=(0,), dtype=int)
         with torch.no_grad():
             for batch in dataloader:
                 inputs = batch['ids']
@@ -44,18 +46,24 @@ class BOWClassifierTrainer(BaseTrainer):
                 loss = loss_fn(preds, labels)
                 # Log
                 losses.append(loss.detach().cpu().numpy())
-                accuracy = torch.sum(torch.argmax(preds, dim=-1) == labels) / labels.shape[0]
+                y_pred: Tensor = preds.argmax(dim=1)
+                accuracy: Tensor = t_sum((y_pred == labels)) / labels.shape[0]
                 accuracies.append(accuracy.detach().cpu().numpy())
-        return np.mean(losses), np.mean(accuracies)
+                predictions = np.concatenate((predictions, y_pred.detach().cpu().numpy()))
+                targets = np.concatenate((targets, labels.detach().cpu().numpy()))
 
-    def _train(self, model: BOWModel, dataloader, loss_fn, optimizer):
+        return np.mean(losses), np.mean(accuracies), predictions, targets
+
+    def _train(self, model: BOWModel, optimiser: Optimizer):
         model.train()
-        losses, accuracies = [], []
-        for batch in dataloader:
+        loss_fn = CrossEntropyLoss()
+        losses: List[np.ndarray] = list()
+        accuracies: List[np.ndarray] = list()
+        for batch in self._train_dataloader:
             inputs = batch['ids']
             labels = batch['label']
             # Reset the gradients for all variables
-            optimizer.zero_grad()
+            optimiser.zero_grad()
             # Forward pass
             preds = model.forward(inputs)
             # Calculate loss
@@ -63,12 +71,13 @@ class BOWClassifierTrainer(BaseTrainer):
             # Backward pass
             loss.backward()
             # Adjust weights
-            optimizer.step()
+            optimiser.step()
             # Log
             losses.append(loss.detach().cpu().numpy())
-            accuracy = torch.sum(torch.argmax(preds, dim=-1) == labels) / labels.shape[0]
+            y_pred: Tensor = preds.argmax(dim=1)
+            accuracy: Tensor = t_sum((y_pred == labels)) / labels.shape[0]
             accuracies.append(accuracy.detach().cpu().numpy())
-
+            
         return np.mean(losses), np.mean(accuracies)
 
     def run(self,
