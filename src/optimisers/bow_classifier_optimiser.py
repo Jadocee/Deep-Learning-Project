@@ -107,10 +107,10 @@ class BOWClassifierOptimiser(BaseOptimiser):
             save_path=save_path
         )
         ResultsUtils.plot_confusion_matrix(cm=results["confusion_matrix"], save_path=save_path)
-
+        
         return results["valid_accuracies"][-1]
 
-    def evaluateOnTest(self, trial: Trial):
+    def _evaluate_test(self, trial: Trial,save_path):
           # Suggestions for hyperparameters
         epochs: int = trial.suggest_categorical("epochs", [5, 10, 20])
         learning_rate: float = trial.suggest_float(
@@ -156,22 +156,13 @@ class BOWClassifierOptimiser(BaseOptimiser):
             lr_scheduler_params=scheduler_hyperparams
         )
 
-        results: Dict[str, Any] = trainer._evaluate(
+        loss,accuracy,predictions,target = trainer._evaluate(
             model=model,
             dataloader = test_dataloader
         )
-        
-        save_path: str = join(STUDIES_DIR, trial.study.study_name, f"trial_{trial.number}_{model.get_id()}")
-        ResultsUtils.plot_loss_and_accuracy_curves(
-            training_losses=results["train_losses"],
-            validation_losses=results["valid_losses"],
-            training_accuracies=results["train_accuracies"],
-            validation_accuracies=results["valid_accuracies"],
-            save_path=save_path
-        )
-        ResultsUtils.plot_confusion_matrix(cm=results["confusion_matrix"], save_path=save_path)
-        return results["valid_accuracies"][-1]
 
+        print(f"Accuracy:{accuracy}       Loss:{loss}")
+        return accuracy,loss,predictions,target
 
     @staticmethod
     def analyseOptimizerImpact(studyname):

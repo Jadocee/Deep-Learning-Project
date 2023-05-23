@@ -288,59 +288,69 @@ class BaseOptimiser(ABC):
             raise
         except KeyboardInterrupt:
             print("Keyboard interrupt detected. Stopping the optimization.")
-    
-    
-    @staticmethod
-    def create_fixed_trial(study_name):
-        output_dir: str = join(STUDIES_DIR, study_name)
+
+        
+    def create_fixed_trial(self,study_name):
         # Read the CSV file
-        df = pd.read_csv(join(output_dir,"results.csv"))
-        sorted_df = df.sort_values(by="value", ascending=False)
-        df = sorted_df.head(3)
-        # Extract the hyperparameters from the CSV file
-        learning_rate = df['params_learning_rate'].astype(float)
-        optimizer = df['params_optimiser']
-        epochs = df['params_epochs'].astype(int)
-        batch_size = df['params_batch_size'].astype(int)
-        n_layers = df['params_n_layers'].astype(int)
-        learning_rate_scheduler = df['params_lr_scheduler']
-        hidden_size = df['params_hidden_size'].astype(int)
-        bidirectional = df['params_bidirectional'].astype(bool)
-        dropout = df['params_dropout'].astype(float)
-        embedding_dim = df['params_embedding_dim'].astype(int)
-        eta_min = df['params_eta_min'].astype(float)
-        factor = df['params_factor'].astype(float)
-        gamma = df['params_gamma'].astype(float)
-        milestone0 = df['params_milestone_0'].astype(float)
-        milestone1 = df['params_milestone_1'].astype(float)
-        milestone2 = df['params_milestone_2'].astype(float)
-        milestone3 = df['params_milestone_3'].astype(float)
-        milestone4 = df['params_milestone_4'].astype(float)
-        min_lr = df['params_min_lr'].astype(float)
-        n_milestone = df['params_n_milestones'].astype(float)
-
-        # Create a fixed trial with the extracted hyperparameters
-        trial = FixedTrial({
-            'learning_rate': learning_rate,
-            'optimizer': optimizer,
-            'epochs': epochs,
-            'batch_size': batch_size,
-            'n_layers': n_layers,
-            'learning_rate_scheduler': learning_rate_scheduler,
-            'hidden_size': hidden_size,
-            'bidirectional': bidirectional,
-            'dropout': dropout,
-            'embedding_dim': embedding_dim,
-            'params_eta_min': eta_min,
-            'params_factor': factor,
-            'params_gamma': gamma,
-            'params_milestone_0': milestone0,
-            'params_milestone_1': milestone1,
-            'params_milestone_2': milestone2,
-            'params_milestone_3': milestone3,
-            'params_milestone_4': milestone4,
-            'params_min_lr': min_lr,
-            'params_n_milestones': n_milestone
-        })
-
-        return trial
+        df: DataFrame = pd.read_csv(join(STUDIES_DIR, study_name, "results.csv")) \
+            .astype({'params_learning_rate': float,  'params_epochs': int,
+                    'params_batch_size': int, 'params_optimiser': str, "params_hidden_size": int,
+                    "params_n_layers": int}) \
+            .sort_values(by=["value"], ascending=False) \
+            .head(3)
+        for i, row in df.iterrows():
+            params_dict: Dict[str, Any] = dict()
+            print(row['params_lr_scheduler'])
+            if pd.notnull(row['params_lr_scheduler']):
+                if row['params_lr_scheduler'] == "MultiStepLR":
+                    n_milestones: int = row['params_n_milestones'].astype(int)
+                    milestones: List[int] = [row[f"params_milestone_{i}"].astype(
+                        int) for i in range(n_milestones)]
+                    gamma: float = row['params_gamma'].astype(float)
+                    params_dict.update(
+                        {"milestones": milestones, "gamma": gamma, "lr_scheduler": "MultiStepLR"})
+                elif row['params_lr_scheduler'] == "ReduceLROnPlateau":
+                    factor: float = row['params_factor']
+                    patience: int = row['params_patience']
+                    threshold: float = row['params_threshold']
+                    threshold_mode: str = row['params_threshold_mode']
+                    cooldown: int = row['params_cooldown']
+                    min_lr: float = row['params_min_lr']
+                    params_dict.update({"factor": factor, "patience": patience, "threshold": threshold,
+                                        "threshold_mode": threshold_mode, "cooldown": cooldown, "min_lr": min_lr,
+                                        "lr_scheduler": "ReduceLROnPlateau"})
+                elif row['params_lr_scheduler'] == "CosineAnnealingLR":
+                    T_max: int = row['params_T_max']
+                    eta_min: float = row['params_eta_min']
+                    params_dict.update(
+                        {"T_max": T_max, "eta_min": eta_min, "lr_scheduler": "CosineAnnealingLR"})
+                elif row['params_lr_scheduler'] == "StepLR":
+                    step_size: int = row['params_step_size']
+                    gamma: float = row['params_gamma']
+                    params_dict.update(
+                        {"step_size": step_size, "gamma": gamma, "lr_scheduler": "StepLR"})
+                elif row['params_lr_scheduler'] == "ExponentialLR":
+                    gamma: float = row['params_gamma']
+                    params_dict.update(
+                        {"gamma": gamma, "lr_scheduler": "ExponentialLR"})
+                else:
+                    raise ValueError(
+                        f"Unknown lr_scheduler: {row['params_lr_scheduler']}")
+            else:
+                params_dict.update({"lr_scheduler": None})
+            if "params_dropout" in row:
+                params_dict.update({"dropout": row['params_dropout']})
+            if "params_embedding_dim" in row:
+                params_dict.update({"embedding_dim": row['params_embedding_dim']})
+            if "params_bidirectional" in row:
+                params_dict.update({"bidirectional": row['params_bidirectional']})
+            if 'params_max_tokens' in row: 
+                params_dict.update({"max_tokens": row['params_max_tokens']})
+            params_dict.update({"learning_rate": row['params_learning_rate'],
+                                "epochs": row['params_epochs'],
+                                "batch_size": row['params_batch_size'],
+                                "optimiser": row['params_optimiser'],
+                                "hidden_size": row['params_hidden_size'],
+                                "n_layers": row['params_n_layers']})
+            trial: FixedTrial = FixedTrial(params_dict)
+            self._evaluate_test(trial,join(STUDIES_DIR, study_name,'test_runs','_test{i}'))

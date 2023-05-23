@@ -172,8 +172,7 @@ class Main:
                     study_name: str = input(
                         "Please enter study name to evaluate Test Set:"
                     )
-                    trial = optimiser.create_fixed_trial(study_name)
-                    optimiser.testModels(trial)
+                    optimiser.create_fixed_trial(study_name)
                 else:
                     print("Invalid choice. Try again.")
                     system("cls" if name == "nt" else "clear")
@@ -194,7 +193,6 @@ class Main:
                         "Please enter study name to evaluate Test Set:"
                     )
                     trial = optimiser.create_fixed_trial(study_name)
-                    optimiser.testModels(trial)
                 elif choice == 4: 
                     study_name: str = input(
                         "Please enter study to validate:"
