@@ -10,15 +10,15 @@
 
 import glob
 import os
-from typing import Optional
+import torchvision.transforms as transforms
 
 import pandas as pd
+import numpy as np
 from PIL import Image
 from torch.utils.data import Dataset
-from torchvision.transforms import Compose
 
 
-class CustomDataset(Dataset):
+class Custom_Dataset(Dataset):
     """
     Custom dataset class for loading images and labels from a directory.
 
@@ -37,13 +37,13 @@ class CustomDataset(Dataset):
             __getitem__(idx): Retrieves the image and its corresponding label at the given index.
     """
 
-    def __init__(self, data_dir: str, transform: Optional[Compose] = None):
+    def __init__(self, data_dir, transform=None):
         """
         Initializes the object of the class.
 
         Args:
             data_dir (str): The directory path containing the image data.
-            transform (Optional[Compose], optional): A transformation to be applied to the images (default: None).
+            transform (optional): A transformation to be applied to the images (default: None).
 
         Attributes:
             image_paths (list): A list of paths to image files.
@@ -66,7 +66,7 @@ class CustomDataset(Dataset):
         else:
             self.image_paths = glob.glob(os.path.join(data_dir, "*.jpg"))
 
-        labels_path = os.path.join(data_dir, "preds.csv")
+        labels_path = os.path.join(data_dir, "values.csv")
         self.labels = (
             pd.read_csv(labels_path, header=None).to_numpy()[:, 1][1:].astype(int)
             if os.path.isfile(labels_path)
@@ -94,9 +94,14 @@ class CustomDataset(Dataset):
             tuple: Tuple containing the transformed image and its label.
         """
         img_path = self.image_paths[idx]
+        transform = transforms.Compose(
+            [
+                transforms.Resize((150, 150)),
+                transforms.ToTensor(),
+            ]
+        )
         img = Image.open(img_path)
-        img_transformed = self.transform(img)
-
+        img_transformed = transform(img)  # Modify to suit resnet and alexnet
         if self.labels is None:
             if img_path.split("\\")[-2] == "buildings":
                 label = 0
@@ -108,8 +113,10 @@ class CustomDataset(Dataset):
                 label = 3
             elif img_path.split("\\")[-2] == "sea":
                 label = 4
-            else:
+            elif img_path.split("\\")[-2] == "street":
                 label = 5
+            else:
+                return img_transformed, img_path.split("\\")[-1]
         else:
             label = self.labels[idx]
-        return img_transformed, label
+        return img_transformed, label, img_path.split("\\")[-1]

@@ -30,3 +30,8 @@ VOCABS_DIR: Final[str] = join(OUT_DIR, "vocabs")
 """
 The directory for storing the vocabulary files.
 """
+
+TRAINED_DIR: str = join(ROOT, "trained_models")
+"""
+The directory for the trained cnn models.
+"""
