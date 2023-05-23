@@ -1,18 +1,23 @@
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import numpy as np
+from pandas import DataFrame
 import torch
+from torch import Tensor
 from optuna import Trial
 from torch.nn import CrossEntropyLoss
 from torch.utils.data import DataLoader
 from torchtext.vocab import Vocab
+from torch.optim import Optimizer
+from torch import sum as t_sum
 
 from models.bow_model import BOWModel
 from trainers.base_trainer import BaseTrainer
+from utils.hyperparam_utils import HyperParamUtils
 
 
 class BOWClassifierTrainer(BaseTrainer):
-
+    __vocab: Vocab
     def save(self):
         raise NotImplementedError
 
@@ -26,34 +31,41 @@ class BOWClassifierTrainer(BaseTrainer):
         self.__vocab = vocab
         self.__pad_index = vocab["<pad>"]
 
-    def _evaluate(self, model: BOWModel, dataloader, loss_fn):
+    def _evaluate(self,model:BOWModel, dataloader, loss_fn = CrossEntropyLoss()):
         model.eval()
         losses, accuracies = [], []
+        predictions: np.ndarray = np.ndarray(shape=(0,), dtype=int)
+        targets: np.ndarray = np.ndarray(shape=(0,), dtype=int)
         with torch.no_grad():
             for batch in dataloader:
-                inputs = batch['multi_hot']
-                labels = batch['label']
+                inputs = batch['ids'].to(self._device)
+                labels = batch['label'].to(self._device)
                 # Forward pass
-                preds = model(inputs)
-                print(len(preds))
+                preds = model.forward(inputs)
                 # Calculate loss
                 loss = loss_fn(preds, labels)
                 # Log
                 losses.append(loss.detach().cpu().numpy())
-            accuracy = torch.sum(torch.argmax(preds, dim=-1) == labels) / labels.shape[0]
-            accuracies.append(accuracy.detach().cpu().numpy())
-        return np.mean(losses), np.mean(accuracies)
+                y_pred: Tensor = preds.argmax(dim=1)
+                accuracy: Tensor = t_sum((y_pred == labels)) / labels.shape[0]
+                accuracies.append(accuracy.detach().cpu().numpy())
+                predictions = np.concatenate((predictions, y_pred.detach().cpu().numpy()))
+                targets = np.concatenate((targets, labels.detach().cpu().numpy()))
 
-    def _train(self, model: BOWModel, dataloader, loss_fn, optimiser):
+        return np.mean(losses), np.mean(accuracies), predictions, targets
+
+    def _train(self, model: BOWModel, optimiser: Optimizer):
         model.train()
-        losses, accuracies = [], []
-        for batch in dataloader:
-            inputs = batch['multi_hot']
-            labels = batch['label']
+        loss_fn = CrossEntropyLoss()
+        losses: List[np.ndarray] = list()
+        accuracies: List[np.ndarray] = list()
+        for batch in self._train_dataloader:
+            inputs = batch['ids'].to(self._device)
+            labels = batch['label'].to(self._device)
             # Reset the gradients for all variables
             optimiser.zero_grad()
             # Forward pass
-            preds = model(inputs)
+            preds = model.forward(inputs)
             # Calculate loss
             loss = loss_fn(preds, labels)
             # Backward pass
@@ -62,30 +74,33 @@ class BOWClassifierTrainer(BaseTrainer):
             optimiser.step()
             # Log
             losses.append(loss.detach().cpu().numpy())
-            accuracy = torch.sum(torch.argmax(preds, dim=-1) == labels) / labels.shape[0]
+            y_pred: Tensor = preds.argmax(dim=1)
+            accuracy: Tensor = t_sum((y_pred == labels)) / labels.shape[0]
             accuracies.append(accuracy.detach().cpu().numpy())
+            
         return np.mean(losses), np.mean(accuracies)
 
-    def fit(self,
+    def run(self,
             model: BOWModel,
             epochs: int = 5,
-            batch_size: int = 128,
             learning_rate: float = 0.01,
-            max_tokens: int = 600,
-            trial: Optional[Trial] = None,
             optimiser_name: str = "Adam",
-            lr_scheduler_name: Optional[str] = None,
-            kwargs: Optional[Dict] = None
             ) -> float:
 
-        optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+        optimiser: Optimizer = HyperParamUtils.define_optimiser(
+            optimiser_name=optimiser_name,
+            model_params=model.get_parameters(),
+            learning_rate=learning_rate
+            )
         loss_fn = CrossEntropyLoss()
         # Train the model and evaluate on the validation set
-        train_losses, train_accuracies = [], []
-        valid_losses, valid_accuracies = [], []
-        for epoch in range(10):
+        train_losses: List[float] = list()
+        train_accuracies: List[float] = list()
+        valid_losses: List[float] = list()
+        valid_accuracies: List[float] = list()
+        for epoch in range(epochs):
             # Train
-            train_loss, train_accuracy = self._train(model, self._train_dataloader, loss_fn, optimizer)
+            train_loss, train_accuracy = self._train(model, self._train_dataloader, loss_fn, optimiser)
             # Evaluate
             valid_loss, valid_accuracy = self._evaluate(model, self._valid_dataloader, loss_fn)
             # Log
@@ -93,7 +108,15 @@ class BOWClassifierTrainer(BaseTrainer):
             train_accuracies.append(train_accuracy)
             valid_losses.append(valid_loss)
             valid_accuracies.append(valid_accuracy)
-            print("Epoch {}: train_loss={:.4f}, train_accuracy={:.4f}, valid_loss={:.4f}, valid_accuracy={:.4f}".format(
-                epoch + 1, train_loss, train_accuracy, valid_loss, valid_accuracy))
 
-        return valid_accuracies[-1]
+            df: DataFrame = DataFrame({"Epoch": f"{epoch + 1:02}/{epochs:02}", "Train Loss": f"{train_loss:.3f}",
+                                       "Train Accuracy": f"{train_accuracy * 100:.2f}%", "Valid Loss": f"{valid_loss:.3f}",
+                                       "Valid Accuracy": f"{valid_accuracy * 100:.2f}%"}, index=[0])
+
+            print(df.to_string(index=False, header=(epoch == 0), justify="center", col_space=15))
+
+            # print("Epoch {}: train_loss={:.4f}, train_accuracy={:.4f}, valid_loss={:.4f}, valid_accuracy={:.4f}".format(
+            #     epoch + 1, train_loss, train_accuracy, valid_loss, valid_accuracy))
+
+        return valid_accuracies[-1],valid_losses[-1]
+

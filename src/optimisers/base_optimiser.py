@@ -7,7 +7,7 @@ from os.path import join
 from pathlib import Path
 from sys import stdout
 from typing import List, Optional, Dict, Any, Tuple, Final, Set
-
+import pandas as pd
 from matplotlib.axes import Axes
 from optuna import Trial, Study, create_study
 from optuna import logging as optuna_logging
@@ -17,6 +17,7 @@ from optuna.trial import FrozenTrial, TrialState
 from optuna.visualization.matplotlib import plot_param_importances, plot_optimization_history
 from pandas import DataFrame
 from torch.utils.data import DataLoader
+from optuna.trial import FixedTrial
 from tqdm import tqdm
 
 from trainers.base_trainer import BaseTrainer
@@ -275,3 +276,69 @@ class BaseOptimiser(ABC):
             raise
         except KeyboardInterrupt:
             print("Keyboard interrupt detected. Stopping the optimization.")
+
+        
+    def create_fixed_trial(self,study_name):
+        # Read the CSV file
+        df: DataFrame = pd.read_csv(join(STUDIES_DIR, study_name, "results.csv")) \
+            .astype({'params_learning_rate': float,  'params_epochs': int,
+                    'params_batch_size': int, 'params_optimiser': str, "params_hidden_size": int,
+                    "params_n_layers": int}) \
+            .sort_values(by=["value"], ascending=False) \
+            .head(3)
+        for i, row in df.iterrows():
+            params_dict: Dict[str, Any] = dict()
+            print(row['params_lr_scheduler'])
+            if pd.notnull(row['params_lr_scheduler']):
+                if row['params_lr_scheduler'] == "MultiStepLR":
+                    n_milestones: int = row['params_n_milestones'].astype(int)
+                    milestones: List[int] = [row[f"params_milestone_{i}"].astype(
+                        int) for i in range(n_milestones)]
+                    gamma: float = row['params_gamma'].astype(float)
+                    params_dict.update(
+                        {"milestones": milestones, "gamma": gamma, "lr_scheduler": "MultiStepLR"})
+                elif row['params_lr_scheduler'] == "ReduceLROnPlateau":
+                    factor: float = row['params_factor']
+                    patience: int = row['params_patience']
+                    threshold: float = row['params_threshold']
+                    threshold_mode: str = row['params_threshold_mode']
+                    cooldown: int = row['params_cooldown']
+                    min_lr: float = row['params_min_lr']
+                    params_dict.update({"factor": factor, "patience": patience, "threshold": threshold,
+                                        "threshold_mode": threshold_mode, "cooldown": cooldown, "min_lr": min_lr,
+                                        "lr_scheduler": "ReduceLROnPlateau"})
+                elif row['params_lr_scheduler'] == "CosineAnnealingLR":
+                    T_max: int = row['params_T_max']
+                    eta_min: float = row['params_eta_min']
+                    params_dict.update(
+                        {"T_max": T_max, "eta_min": eta_min, "lr_scheduler": "CosineAnnealingLR"})
+                elif row['params_lr_scheduler'] == "StepLR":
+                    step_size: int = row['params_step_size']
+                    gamma: float = row['params_gamma']
+                    params_dict.update(
+                        {"step_size": step_size, "gamma": gamma, "lr_scheduler": "StepLR"})
+                elif row['params_lr_scheduler'] == "ExponentialLR":
+                    gamma: float = row['params_gamma']
+                    params_dict.update(
+                        {"gamma": gamma, "lr_scheduler": "ExponentialLR"})
+                else:
+                    raise ValueError(
+                        f"Unknown lr_scheduler: {row['params_lr_scheduler']}")
+            else:
+                params_dict.update({"lr_scheduler": None})
+            if "params_dropout" in row:
+                params_dict.update({"dropout": row['params_dropout']})
+            if "params_embedding_dim" in row:
+                params_dict.update({"embedding_dim": row['params_embedding_dim']})
+            if "params_bidirectional" in row:
+                params_dict.update({"bidirectional": row['params_bidirectional']})
+            if 'params_max_tokens' in row: 
+                params_dict.update({"max_tokens": row['params_max_tokens']})
+            params_dict.update({"learning_rate": row['params_learning_rate'],
+                                "epochs": row['params_epochs'],
+                                "batch_size": row['params_batch_size'],
+                                "optimiser": row['params_optimiser'],
+                                "hidden_size": row['params_hidden_size'],
+                                "n_layers": row['params_n_layers']})
+            trial: FixedTrial = FixedTrial(params_dict)
+            self._evaluate_test(trial,join(STUDIES_DIR, study_name,'test_runs','_test{i}'))

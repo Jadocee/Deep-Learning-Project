@@ -2,6 +2,7 @@ from os import system, name
 from os.path import exists, join
 from pathlib import Path
 from typing import Dict, List, Final, Any
+import torch
 
 from optuna.trial import FixedTrial
 from pandas import read_csv, DataFrame, Series
@@ -53,9 +54,13 @@ class Main:
         ],
         "LSTM Trainer Menu": [
             "Optimise Hyperparameters",
+            "Evaluate Top 3 Models on Test Set"
         ],
         "BOW Trainer Menu": [
-            "Run Bag Of Words 1",
+            "Run Bag Of Words", 
+            "Validate Top 10 Models",
+            "Evaluate Top 3 Models on Test Set",
+            "General Analysis"
         ],
         "Fine-Tune Pre-Trained Model Menu": [
             "Fine-tune cardiffnlp/twitter-roberta-base-dec2021-tweet-topic-single-all",
@@ -175,16 +180,38 @@ class Main:
                     system("cls" if name == "nt" else "clear")
                     optimiser: LSTMClassifierOptimiser = LSTMClassifierOptimiser(device=Main.DEVICE)
                     optimiser.run(n_trials=120)
+                elif choice == 2:  
+                    optimiser: LSTMClassifierOptimiser = LSTMClassifierOptimiser(device=Main.DEVICE)
+                    study_name: str = input(
+                        "Please enter study name to evaluate Test Set:"
+                    )
+                    optimiser.create_fixed_trial(study_name)
                 else:
                     print("Invalid choice. Try again.")
                     system("cls" if name == "nt" else "clear")
             elif current_menu == "BOW Trainer Menu":
+                cuda = "cuda" if torch.cuda.is_available() else "cpu"
+                optimiser: BOWClassifierOptimiser = BOWClassifierOptimiser(device=cuda)
                 if choice == 0:
                     current_menu = "Main Menu"
                 elif choice == 1:
-                    print({"BagOfWords"})
-                    optimiser: BOWClassifierOptimiser = BOWClassifierOptimiser(device=Main.DEVICE)
-                    optimiser.run(2)
+                    optimiser.run(n_trials=120)
+                elif choice == 2:  
+                    study_name: str = input(
+                        "Please enter study to validate:"
+                    )
+                    optimiser.validate(study_name)
+                elif choice == 3:
+                    study_name: str = input(
+                        "Please enter study name to evaluate Test Set:"
+                    )
+                    trial = optimiser.create_fixed_trial(study_name)
+                elif choice == 4: 
+                    study_name: str = input(
+                        "Please enter study to validate:"
+                    )
+                    optimiser.analyseOptimizerImpact(study_name)
+                    optimiser.analyseLearningRate(study_name)
             elif current_menu == "Image Classifier Menu":
                 if choice == 0:
                     current_menu = "Main Menu"
