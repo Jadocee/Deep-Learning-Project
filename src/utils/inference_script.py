@@ -1,11 +1,8 @@
 import torch
-import definitions
+import utils.definitions
 import os.path
 import pandas as pd
 
-from cnn_custom_dataset import Custom_Dataset
-
-# from models.resnet_model import ResNet18, Resblock
 from torchvision import transforms
 from torch.utils.data import DataLoader
 
@@ -18,7 +15,7 @@ class Inference:
         model = model.to(self.device)
 
         model.load_state_dict(
-            torch.load(os.path.join(definitions.TRAINED_DIR, "resnet_pretrained.pth"))
+            torch.load(os.path.join(utils.definitions.TRAINED_DIR, "resnet_pretrained.pth"))
         )
         model.eval()
         test_loader = self.load_data()
