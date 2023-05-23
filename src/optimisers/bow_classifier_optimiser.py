@@ -61,6 +61,8 @@ class BOWClassifierOptimiser(BaseOptimiser):
             "max_tokens", [100, 200, 300, 400, 500, 600])
         optimiser_name: str = trial.suggest_categorical(
             "optimiser", ["Adam", "RMSprop", "SGD", "Adagrad"])
+        hidden_size: int = trial.suggest_categorical("hidden_size", [64,128,256])
+        n_layers: int = trial.suggest_categorical("n_layers", [2,4,6])
         scheduler_hyperparams: Optional[Dict[str, Any]] = self._define_scheduler_hyperparams(trial)
 
         # Load and preprocess the data
@@ -71,6 +73,9 @@ class BOWClassifierOptimiser(BaseOptimiser):
         model: BOWModel = BOWModel(
             vocab_size=len(self.__vocab),
             output_size=6,
+            n_layers = n_layers,
+            layer_size = hidden_size,
+            device= self._device
         )
 
         # Create the trainer
@@ -91,7 +96,7 @@ class BOWClassifierOptimiser(BaseOptimiser):
             optimiser_name=optimiser_name,
             lr_scheduler_params=scheduler_hyperparams
         )
-        
+
         save_path: str = join(STUDIES_DIR, trial.study.study_name, f"trial_{trial.number}_{model.get_id()}")
         ResultsUtils.plot_loss_and_accuracy_curves(
             training_losses=results["train_losses"],
@@ -144,6 +149,9 @@ class BOWClassifierOptimiser(BaseOptimiser):
                 model: BOWModel = BOWModel(
                     vocab_size=len(self.__vocab),
                     output_size=6,
+                    n_layers = 4,
+                    layer_size = 12,
+                    device= self._device
                 )
                 runs = runs+1
                 trainer: BOWClassifierTrainer = BOWClassifierTrainer(
@@ -203,6 +211,9 @@ class BOWClassifierOptimiser(BaseOptimiser):
             model: BOWModel = BOWModel(
                 vocab_size=len(self.__vocab),
                 output_size=6,
+                n_layers = 4,
+                layer_size = 12,
+                device=self._device
             )
             trainer: BOWClassifierTrainer = BOWClassifierTrainer(
                 train_dataloader=train_dataloader,

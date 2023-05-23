@@ -3,6 +3,7 @@ from typing import Tuple, Dict, List, Optional, Any
 
 from datasets import DatasetDict, Dataset
 from optuna import Trial
+import pandas as pd
 from torch import Tensor, stack
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader
@@ -168,3 +169,98 @@ class LSTMClassifierOptimiser(BaseOptimiser):
         ResultsUtils.plot_confusion_matrix(cm=results["confusion_matrix"], save_path=save_path)
 
         return results["valid_accuracies"][-1]
+    
+    
+    def testModels(self, study_name):
+        output_dir: str = join(STUDIES_DIR, study_name)
+        models = []
+        df = pd.read_csv(join(output_dir, "results.csv"))
+        sorted_df = df.sort_values(by="value", ascending=False)
+        df = sorted_df.head(3)
+
+        learning_rate = df['params_learning_rate'].astype(float)
+        optimizer = df['params_optimizer']
+        max_tokens = df['params_max_tokens'].astype(int)
+        epochs = df['params_epochs'].astype(int)
+        batch_size = df['params_batch_size'].astype(int)
+        n_layers =df['params_n_layers'].astype(int)
+        learning_rate_scheduler=df['params_lr_scheduler']
+        hidden_size =df["params_hidden_size"].astype(int)
+        bidirectional = df['params_bidirectional'].astype(bool)
+        dropout=df['params_dropout'].astype(float)
+        embedding_dim = df['params_embedding_dim'].astype(int)
+
+        models = list(zip(learning_rate, optimizer,
+                    max_tokens, epochs, batch_size))
+
+        models = pd.DataFrame({
+            'learning_rate': learning_rate,
+            'optimizer': optimizer,
+            'max_tokens': max_tokens,
+            'epochs': epochs,
+            'batch_size': batch_size,
+            'n_layers': n_layers,
+            'learning_rate_scheduler': learning_rate_scheduler,
+            'hidden_size': hidden_size,
+            'bidirectional': bidirectional,
+            'dropout': dropout,
+            'embedding_dim': embedding_dim  
+        })
+
+
+        models['Accuracy'] = None
+        models['Loss'] = None
+
+        for i, row in models.iterrows():
+            lr = row['learning_rate']
+            opt = row['optimizer']
+            tokens = row['max_tokens']
+            epochs = row['epochs']
+            batch_size = row['batch_size']
+            n_layers = row['n_layers']
+            lr_scheduler = row['learning_rate_scheduler']
+            hidden_size = row['hidden_size']
+            bidirectional = row['bidirectional']
+            dropout = row['dropout']
+            embedding_dim = row['embedding_dim']
+
+            train_dataloader, valid_dataloader, test_dataloader = self._prepare_data(batch_size=batch_size, max_tokens=tokens)
+           
+            model: LSTMModel = LSTMModel(
+            vocab_size=len(self.__vocab),
+                embedding_dim=embedding_dim,
+                hidden_size=hidden_size,
+                n_layers=n_layers,
+                bidirectional=bidirectional,
+                dropout=dropout,
+                output_size=6,
+                pad_idx=self.__vocab["<pad>"],
+                device=self._device
+            )
+            trainer = LSTMClassifierTrainer(
+                train_dataloader=train_dataloader,
+                valid_dataloader=valid_dataloader,
+                test_dataloader=test_dataloader,
+                vocab=self.__vocab,
+                device=self._device
+            )
+
+            results: Dict[str, Any] = trainer.fit(
+                model=model,
+                learning_rate=lr,
+                epochs=epochs,
+                batch_size=batch_size,
+                trial=1,
+                optimiser_name=opt,
+                lr_scheduler_params=lr_scheduler
+            )
+
+            loss, accuracy, pred, target = trainer._evaluate(model, test_dataloader)
+            print(accuracy)
+            print(loss)
+            models.loc[i, 'Accuracy'] = accuracy
+            models.loc[i, 'Loss'] = loss
+        print(models)
+        models['Accuracy'] = pd.to_numeric(models['Accuracy'])
+        models['Loss'] = pd.to_numeric(models['Loss'])
+        models.to_csv(join(output_dir, "TestResults.csv"), index=False)

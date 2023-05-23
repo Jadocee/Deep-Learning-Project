@@ -38,8 +38,8 @@ class BOWClassifierTrainer(BaseTrainer):
         targets: np.ndarray = np.ndarray(shape=(0,), dtype=int)
         with torch.no_grad():
             for batch in dataloader:
-                inputs = batch['ids']
-                labels = batch['label']
+                inputs = batch['ids'].to(self._device)
+                labels = batch['label'].to(self._device)
                 # Forward pass
                 preds = model.forward(inputs)
                 # Calculate loss
@@ -60,8 +60,8 @@ class BOWClassifierTrainer(BaseTrainer):
         losses: List[np.ndarray] = list()
         accuracies: List[np.ndarray] = list()
         for batch in self._train_dataloader:
-            inputs = batch['ids']
-            labels = batch['label']
+            inputs = batch['ids'].to(self._device)
+            labels = batch['label'].to(self._device)
             # Reset the gradients for all variables
             optimiser.zero_grad()
             # Forward pass

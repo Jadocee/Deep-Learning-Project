@@ -2,6 +2,7 @@ from os import system, name
 from os.path import exists
 from pathlib import Path
 from typing import Dict, List, Final
+import torch
 
 from torch.cuda import is_available as has_cuda, empty_cache
 
@@ -48,6 +49,7 @@ class Main:
         ],
         "LSTM Trainer Menu": [
             "Optimise Hyperparameters",
+            "Evaluate Top 3 Models on Test Set"
         ],
         "BOW Trainer Menu": [
             "Run Bag Of Words", 
@@ -165,11 +167,18 @@ class Main:
                     system("cls" if name == "nt" else "clear")
                     optimiser: LSTMClassifierOptimiser = LSTMClassifierOptimiser(device=Main.DEVICE)
                     optimiser.run()
+                elif choice == 2:  
+                    optimiser: LSTMClassifierOptimiser = LSTMClassifierOptimiser(device=Main.DEVICE)
+                    study_name: str = input(
+                        "Please enter study name to evaluate Test Set:"
+                    )
+                    optimiser.testModels(study_name)
                 else:
                     print("Invalid choice. Try again.")
                     system("cls" if name == "nt" else "clear")
             elif current_menu == "BOW Trainer Menu":
-                optimiser: BOWClassifierOptimiser = BOWClassifierOptimiser(device=Main.DEVICE)
+                cuda = "cuda" if torch.cuda.is_available() else "cpu"
+                optimiser: BOWClassifierOptimiser = BOWClassifierOptimiser(device=cuda)
                 if choice == 0:
                     current_menu = "Main Menu"
                 elif choice == 1:
