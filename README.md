@@ -2,6 +2,31 @@
 
 This repository contains a set of Python classes to load, preprocess, and train a ResNet18 model on the Intel Image Classification dataset.
 
+## Running the Inference Script
+
+To run the inference script and generate predictions for individual images, follow the steps below:
+
+1. Place all test images in the `test` folder located at `data/test`. Ensure that the images are in a format supported by the script (e.g., JPEG).
+2. Download all the necessary dependencies by using the `requirements.txt` file. Install the dependencies by running the following command in your command line interface:
+
+   ```
+   pip install -r requirements.txt
+   ```
+
+   This will install all the required packages and libraries needed to run the script.
+
+3. Once you have placed the test images and installed the dependencies, you can run the inference script. The script is located at `src/utils/inference_script.py`. Run the script by executing the following command:
+
+   ```
+   python src/utils/inference_script.py
+   ```
+
+   This command will execute the script and perform inference on the test images using a pretrained model.
+
+4. After running the script, the results for each individual image will be recorded in the `preds.csv` file, which can be found in the `test` folder. The `preds.csv` file will contain the predicted labels for the test images.
+
+By following these steps, you will be able to run the inference script and generate predictions for the test images. Make sure to verify that the test images are placed correctly and that the script has the necessary permissions to access the files and directories it requires.
+
 ## Table of Contents
 
 - [Files](#files)
