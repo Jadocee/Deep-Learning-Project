@@ -99,7 +99,7 @@ class BaseTrainer(ABC):
             raise ValueError(f"Model {model} is not trained. Cannot test untrained model.")
 
         model.eval()
-        test_loss, test_acc = self._evaluate(model, self._test_dataloader)
+        test_loss, test_acc, preds, targets = self._evaluate(model, self._test_dataloader)
         # TODO: Create report
         return test_loss, test_acc
 
