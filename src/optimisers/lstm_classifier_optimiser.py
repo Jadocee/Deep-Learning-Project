@@ -171,60 +171,34 @@ class LSTMClassifierOptimiser(BaseOptimiser):
         return results["valid_accuracies"][-1]
     
     
-    def testModels(self, study_name):
-        output_dir: str = join(STUDIES_DIR, study_name)
-        models = []
-        df = pd.read_csv(join(output_dir, "results.csv"))
-        sorted_df = df.sort_values(by="value", ascending=False)
-        df = sorted_df.head(3)
+    def evalTest(self,trial: Trial):
+          self._logger.info(f"Trial number: {trial.number}")
 
-        learning_rate = df['params_learning_rate'].astype(float)
-        optimizer = df['params_optimiser']
-        epochs = df['params_epochs'].astype(int)
-        batch_size = df['params_batch_size'].astype(int)
-        n_layers =df['params_n_layers'].astype(int)
-        learning_rate_scheduler=df['params_lr_scheduler']
-        hidden_size =df["params_hidden_size"].astype(int)
-        bidirectional = df['params_bidirectional'].astype(bool)
-        dropout=df['params_dropout'].astype(float)
-        embedding_dim = df['params_embedding_dim'].astype(int)
+            epochs: int = trial.suggest_categorical("epochs", [5, 10])
+            learning_rate: float = trial.suggest_float("learning_rate", 1e-6, 1e-1, log=True)
+            batch_size: int = trial.suggest_categorical("batch_size", [32, 64, 128, 256])
+            optimiser_name: str = trial.suggest_categorical("optimiser", ["Adam"])
+            n_layers: int = trial.suggest_int("n_layers", 1, 5)
+            bidirectional: bool = trial.suggest_categorical("bidirectional", [True, False])
+            hidden_size: int = trial.suggest_categorical("hidden_size", [256, 512, 1024, 2048])
+            embedding_dim: int = trial.suggest_categorical("embedding_dim", [100, 200, 300, 400, 500])
+            if n_layers > 1:
+                dropout: float = trial.suggest_float("dropout", 0.1, 0.5)
+            else:
+                dropout: float = trial.suggest_float("dropout", 0.0, 0.0)
+            scheduler_hyperparams: Optional[Dict[str, Any]] = self._define_scheduler_hyperparams(trial)
 
-        models = list(zip(learning_rate, optimizer,n_layers,learning_rate_scheduler,hidden_size,bidirectional,
-                          dropout,embedding_dim, epochs, batch_size))
+            self._logger.info(f"Selected hyperparameters: {trial.params.__str__()}")
 
-        models = pd.DataFrame({
-            'learning_rate': learning_rate,
-            'optimizer': optimizer,
-            'epochs': epochs,
-            'batch_size': batch_size,
-            'n_layers': n_layers,
-            'learning_rate_scheduler': learning_rate_scheduler,
-            'hidden_size': hidden_size,
-            'bidirectional': bidirectional,
-            'dropout': dropout,
-            'embedding_dim': embedding_dim  
-        })
-
-
-        models['Accuracy'] = None
-        models['Loss'] = None
-
-        for i, row in models.iterrows():
-            lr = row['learning_rate']
-            opt = row['optimizer']
-            epochs = row['epochs']
-            batch_size = row['batch_size']
-            n_layers = row['n_layers']
-            lr_scheduler = row['learning_rate_scheduler']
-            hidden_size = row['hidden_size']
-            bidirectional = row['bidirectional']
-            dropout = row['dropout']
-            embedding_dim = row['embedding_dim']
+            # TODO: Store the trainer as an attribute of the optimiser
+            #   - Trainer and dataloaders can be reused for each trial
+            #   - Easier transition to evaluating the model on the test set
+            #   - The batch size for the dataloaders can be changed for each trial
+            #   - Data only needs to be loaded and preprocessed once
 
             train_dataloader, valid_dataloader, test_dataloader = self._prepare_data(batch_size=batch_size, max_tokens=1000)
-           
             model: LSTMModel = LSTMModel(
-            vocab_size=len(self.__vocab),
+                vocab_size=len(self.__vocab),
                 embedding_dim=embedding_dim,
                 hidden_size=hidden_size,
                 n_layers=n_layers,
@@ -241,23 +215,24 @@ class LSTMClassifierOptimiser(BaseOptimiser):
                 vocab=self.__vocab,
                 device=self._device
             )
-
-            results: Dict[str, Any] = trainer.fit(
+            trainer.fit(
                 model=model,
-                learning_rate=lr,
+                learning_rate=learning_rate,
                 epochs=epochs,
                 batch_size=batch_size,
-                trial=1,
-                optimiser_name=opt,
-                lr_scheduler_params=lr_scheduler
+                trial=trial,
+                optimiser_name=optimiser_name,
+                lr_scheduler_params=scheduler_hyperparams
             )
+            results: Dict[str, Any] = trainer._evaluate(model,test_dataloader)
+            save_path: str = join(STUDIES_DIR, trial.study.study_name, f"trial_{trial.number}_{model.get_id()}")
+            ResultsUtils.plot_loss_and_accuracy_curves(
+                training_losses=results["train_losses"],
+                validation_losses=results["valid_losses"],
+                training_accuracies=results["train_accuracies"],
+                validation_accuracies=results["valid_accuracies"],
+                save_path=save_path
+            )
+            ResultsUtils.plot_confusion_matrix(cm=results["confusion_matrix"], save_path=save_path)
 
-            loss, accuracy, pred, target = trainer._evaluate(model, test_dataloader)
-            print(accuracy)
-            print(loss)
-            models.loc[i, 'Accuracy'] = accuracy
-            models.loc[i, 'Loss'] = loss
-        print(models)
-        models['Accuracy'] = pd.to_numeric(models['Accuracy'])
-        models['Loss'] = pd.to_numeric(models['Loss'])
-        models.to_csv(join(output_dir, "TestResults.csv"), index=False)
+            return results["valid_accuracies"][-1]

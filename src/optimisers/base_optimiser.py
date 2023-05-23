@@ -7,7 +7,7 @@ from os.path import join
 from pathlib import Path
 from sys import stdout
 from typing import List, Optional, Dict, Any, Tuple, Final, Set
-
+import pandas as pd
 from matplotlib.axes import Axes
 from optuna import Trial, Study, create_study
 from optuna import logging as optuna_logging
@@ -18,6 +18,7 @@ from optuna.visualization.matplotlib import plot_param_importances, plot_optimiz
     plot_parallel_coordinate
 from pandas import DataFrame
 from torch.utils.data import DataLoader
+from optuna.trial import FixedTrial
 
 from trainers.base_trainer import BaseTrainer
 from utils.definitions import STUDIES_DIR
@@ -287,3 +288,59 @@ class BaseOptimiser(ABC):
             raise
         except KeyboardInterrupt:
             print("Keyboard interrupt detected. Stopping the optimization.")
+    
+    
+    @staticmethod
+    def create_fixed_trial(study_name):
+        output_dir: str = join(STUDIES_DIR, study_name)
+        # Read the CSV file
+        df = pd.read_csv(join(output_dir,"results.csv"))
+        sorted_df = df.sort_values(by="value", ascending=False)
+        df = sorted_df.head(3)
+        # Extract the hyperparameters from the CSV file
+        learning_rate = df['params_learning_rate'].astype(float)
+        optimizer = df['params_optimiser']
+        epochs = df['params_epochs'].astype(int)
+        batch_size = df['params_batch_size'].astype(int)
+        n_layers = df['params_n_layers'].astype(int)
+        learning_rate_scheduler = df['params_lr_scheduler']
+        hidden_size = df['params_hidden_size'].astype(int)
+        bidirectional = df['params_bidirectional'].astype(bool)
+        dropout = df['params_dropout'].astype(float)
+        embedding_dim = df['params_embedding_dim'].astype(int)
+        eta_min = df['params_eta_min'].astype(float)
+        factor = df['params_factor'].astype(float)
+        gamma = df['params_gamma'].astype(float)
+        milestone0 = df['params_milestone_0'].astype(float)
+        milestone1 = df['params_milestone_1'].astype(float)
+        milestone2 = df['params_milestone_2'].astype(float)
+        milestone3 = df['params_milestone_3'].astype(float)
+        milestone4 = df['params_milestone_4'].astype(float)
+        min_lr = df['params_min_lr'].astype(float)
+        n_milestone = df['params_n_milestones'].astype(float)
+
+        # Create a fixed trial with the extracted hyperparameters
+        trial = FixedTrial({
+            'learning_rate': learning_rate,
+            'optimizer': optimizer,
+            'epochs': epochs,
+            'batch_size': batch_size,
+            'n_layers': n_layers,
+            'learning_rate_scheduler': learning_rate_scheduler,
+            'hidden_size': hidden_size,
+            'bidirectional': bidirectional,
+            'dropout': dropout,
+            'embedding_dim': embedding_dim,
+            'params_eta_min': eta_min,
+            'params_factor': factor,
+            'params_gamma': gamma,
+            'params_milestone_0': milestone0,
+            'params_milestone_1': milestone1,
+            'params_milestone_2': milestone2,
+            'params_milestone_3': milestone3,
+            'params_milestone_4': milestone4,
+            'params_min_lr': min_lr,
+            'params_n_milestones': n_milestone
+        })
+
+        return trial
