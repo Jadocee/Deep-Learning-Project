@@ -179,8 +179,7 @@ class LSTMClassifierOptimiser(BaseOptimiser):
         df = sorted_df.head(3)
 
         learning_rate = df['params_learning_rate'].astype(float)
-        optimizer = df['params_optimizer']
-        max_tokens = df['params_max_tokens'].astype(int)
+        optimizer = df['params_optimiser']
         epochs = df['params_epochs'].astype(int)
         batch_size = df['params_batch_size'].astype(int)
         n_layers =df['params_n_layers'].astype(int)
@@ -196,7 +195,6 @@ class LSTMClassifierOptimiser(BaseOptimiser):
         models = pd.DataFrame({
             'learning_rate': learning_rate,
             'optimizer': optimizer,
-            'max_tokens': max_tokens,
             'epochs': epochs,
             'batch_size': batch_size,
             'n_layers': n_layers,
