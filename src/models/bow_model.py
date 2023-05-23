@@ -1,4 +1,5 @@
 from torch import Tensor
+import torch
 import torch.nn as nn
 from models.base_model import BaseModel
 
@@ -15,6 +16,8 @@ class BOWModel(BaseModel):
         self._modules.to(self._device)
     def forward(self, x: Tensor) -> Tensor:
         for module in self._modules:
+            # Cast tensor to a different type using to()
+            x = x.to(dtype=torch.float32)  # Cast to float32
             x = module(x)
         return x
     

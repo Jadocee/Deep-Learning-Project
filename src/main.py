@@ -50,7 +50,10 @@ class Main:
             "Optimise Hyperparameters",
         ],
         "BOW Trainer Menu": [
-            "Run Bag Of Words 1",
+            "Run Bag Of Words", 
+            "Validate Top 10 Models",
+            "Evaluate Top 3 Models on Test Set",
+            "General Analysis"
         ]
     }
 
@@ -166,12 +169,27 @@ class Main:
                     print("Invalid choice. Try again.")
                     system("cls" if name == "nt" else "clear")
             elif current_menu == "BOW Trainer Menu":
+                optimiser: BOWClassifierOptimiser = BOWClassifierOptimiser(device=Main.DEVICE)
                 if choice == 0:
                     current_menu = "Main Menu"
                 elif choice == 1:
-                    print({"BagOfWords"})
-                    optimiser: BOWClassifierOptimiser = BOWClassifierOptimiser(device=Main.DEVICE)
-                    optimiser.run(None, prune=True)
+                    optimiser.run(n_trials=2)
+                elif choice == 2:  
+                    study_name: str = input(
+                        "Please enter study to validate:"
+                    )
+                    optimiser.validate(study_name)
+                elif choice == 3:
+                    study_name: str = input(
+                        "Please enter study name to evaluate Test Set:"
+                    )
+                    optimiser.testModels(study_name)
+                elif choice == 4: 
+                    study_name: str = input(
+                        "Please enter study to validate:"
+                    )
+                    optimiser.analyseOptimizerImpact(study_name)
+                    optimiser.analyseLearningRate(study_name)
             elif current_menu == "Image Classifier Menu":
                 if choice == 0:
                     current_menu = "Main Menu"

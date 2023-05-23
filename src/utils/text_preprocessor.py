@@ -332,9 +332,8 @@ class TextPreprocessor:
 
         if self.__vocab is None:
             raise ValueError("No vocabulary has been created. Please create a vocabulary before encoding.")
-
         encoded: ndarray = zeros(len(self.__vocab), dtype=int)
-        encoded[[self.__vocab[token] for token in tokens]] = 1
+        encoded[[self.__vocab[str(token)] for token in tokens]] = 1
         return encoded
 
     def one_hot_encode(self, tokens: List[str]) -> ndarray:
