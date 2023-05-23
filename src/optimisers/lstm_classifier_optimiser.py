@@ -212,7 +212,6 @@ class LSTMClassifierOptimiser(BaseOptimiser):
         for i, row in models.iterrows():
             lr = row['learning_rate']
             opt = row['optimizer']
-            tokens = row['max_tokens']
             epochs = row['epochs']
             batch_size = row['batch_size']
             n_layers = row['n_layers']
