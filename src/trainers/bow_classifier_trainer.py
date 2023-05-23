@@ -35,7 +35,6 @@ class BOWClassifierTrainer(BaseTrainer):
         model.eval()
         losses, accuracies = [], []
         with torch.no_grad():
-            print(dataloader)
             for batch in dataloader:
                 inputs = batch['ids']
                 labels = batch['label']
@@ -90,7 +89,7 @@ class BOWClassifierTrainer(BaseTrainer):
         train_accuracies: List[float] = list()
         valid_losses: List[float] = list()
         valid_accuracies: List[float] = list()
-        for epoch in range(10):
+        for epoch in range(epochs):
             # Train
             train_loss, train_accuracy = self._train(model, self._train_dataloader, loss_fn, optimiser)
             # Evaluate

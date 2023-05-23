@@ -173,7 +173,7 @@ class Main:
                 if choice == 0:
                     current_menu = "Main Menu"
                 elif choice == 1:
-                    optimiser.run(n_trials=2)
+                    optimiser.run(n_trials=120)
                 elif choice == 2:  
                     study_name: str = input(
                         "Please enter study to validate:"
