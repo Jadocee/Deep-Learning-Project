@@ -1,13 +1,17 @@
 from os import system, name
-from os.path import exists
+from os.path import exists, join
 from pathlib import Path
 from typing import Dict, List, Final
 import torch
 
+from optuna.trial import FixedTrial
+from pandas import read_csv, DataFrame
+from pandas._testing import loc
 from torch.cuda import is_available as has_cuda, empty_cache
 
 from optimisers.bow_classifier_optimiser import BOWClassifierOptimiser
 from optimisers.lstm_classifier_optimiser import LSTMClassifierOptimiser
+from optimisers.pretrained_optimiser import PretrainedOptimiser
 from trainers.cnn_trainer import menu_prompt
 from utils.definitions import MODELS_DIR, STUDIES_DIR
 
@@ -46,6 +50,7 @@ class Main:
         "Tweet Classifier Menu": [
             "LSTM Trainer",
             "BOW Trainer",
+            "Fine-Tune Pre-Trained Model",
         ],
         "LSTM Trainer Menu": [
             "Optimise Hyperparameters",
@@ -56,6 +61,10 @@ class Main:
             "Validate Top 10 Models",
             "Evaluate Top 3 Models on Test Set",
             "General Analysis"
+        ],
+        "Fine-Tune Pre-Trained Model Menu": [
+            "Fine-tune cardiffnlp/twitter-roberta-base-dec2021-tweet-topic-single-all",
+            "Test cardiffnlp/twitter-roberta-base-dec2021-tweet-topic-single-all",
         ]
     }
 
@@ -138,6 +147,8 @@ class Main:
                     Main.__clear_cuda_cache()
                     input("Press any key to continue...")
                     system("cls" if name == "nt" else "clear")
+                elif choice == 5:
+                    current_menu = "Fine-Tune Pre-Trained Model"
                 else:
                     print("Invalid choice. Try again.")
                     system("cls" if name == "nt" else "clear")
@@ -157,6 +168,8 @@ class Main:
                     current_menu = "LSTM Trainer Menu"
                 elif choice == 2:
                     current_menu = "BOW Trainer Menu"
+                elif choice == 3:
+                    current_menu = "Fine-Tune Pre-Trained Model Menu"
                 else:
                     print("Invalid choice. Try again.")
                     system("cls" if name == "nt" else "clear")
@@ -166,7 +179,7 @@ class Main:
                 elif choice == 1:
                     system("cls" if name == "nt" else "clear")
                     optimiser: LSTMClassifierOptimiser = LSTMClassifierOptimiser(device=Main.DEVICE)
-                    optimiser.run()
+                    optimiser.run(n_trials=120)
                 elif choice == 2:  
                     optimiser: LSTMClassifierOptimiser = LSTMClassifierOptimiser(device=Main.DEVICE)
                     study_name: str = input(
@@ -202,6 +215,24 @@ class Main:
             elif current_menu == "Image Classifier Menu":
                 if choice == 0:
                     current_menu = "Main Menu"
+                else:
+                    print("Invalid choice. Try again.")
+                    system("cls" if name == "nt" else "clear")
+            elif current_menu == "Fine-Tune Pre-Trained Model Menu":
+                if choice == 0:
+                    current_menu = "Tweet Classifier Menu"
+                elif choice == 1:
+                    PretrainedOptimiser(model_name="cardiffnlp/twitter-roberta-base-dec2021-tweet-topic-single-all",
+                                        device=Main.DEVICE).run(2)
+                elif choice == 2:
+                    df: DataFrame = \
+                        read_csv(join(STUDIES_DIR, "PretrainedOptimiser_2023-05-23_16-09-28", "results.csv"))
+                    best_trial = loc(df["value"].idxmax())
+                    param_dict = best_trial.filter(like="param_").to_dict()
+                    param_dict = {key.replace("param_", ""): value for key, value in param_dict.items()}
+                    trial: FixedTrial = FixedTrial(param_dict)
+                    PretrainedOptimiser(model_name="cardiffnlp/twitter-roberta-base-dec2021-tweet-topic-single-all",
+                                        device=Main.DEVICE).test_model(trial)
                 else:
                     print("Invalid choice. Try again.")
                     system("cls" if name == "nt" else "clear")

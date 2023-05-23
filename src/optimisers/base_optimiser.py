@@ -14,11 +14,11 @@ from optuna import logging as optuna_logging
 from optuna.pruners import MedianPruner, NopPruner, BasePruner, HyperbandPruner
 from optuna.study import StudyDirection
 from optuna.trial import FrozenTrial, TrialState
-from optuna.visualization.matplotlib import plot_param_importances, plot_optimization_history, plot_slice, plot_contour, \
-    plot_parallel_coordinate
+from optuna.visualization.matplotlib import plot_param_importances, plot_optimization_history
 from pandas import DataFrame
 from torch.utils.data import DataLoader
 from optuna.trial import FixedTrial
+from tqdm import tqdm
 
 from trainers.base_trainer import BaseTrainer
 from utils.definitions import STUDIES_DIR
@@ -45,6 +45,7 @@ class BaseOptimiser(ABC):
 
     _device: str
     _logger: Final[Logger]
+    _progress_bar: tqdm
 
     def __init__(self, device: str = "cpu") -> None:
         """
@@ -225,14 +226,15 @@ class BaseOptimiser(ABC):
         References:
             - https://optuna.readthedocs.io/en/stable/reference/generated/optuna.pruners.HyperbandPruner.html
         """
-
+        # self._progress_bar = tqdm(range(n_trials), desc="Hyperparameter optimisation", unit="trial")
+        # self._progress_bar.set_description_str("Initialising...")
         study: Study = create_study(
             direction=StudyDirection.MAXIMIZE,
             study_name=f"{self.__class__.__name__}_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}",
             pruner=HyperbandPruner(min_resource=3, max_resource="auto", reduction_factor=3)
         )
         try:
-            self._logger.info(f"Starting hyperparameter optimisation process with {n_trials} trials.")
+            # self._progress_bar.set_description_str("Starting hyperparameter optimisation...")
             study.optimize(self._objective, n_trials=n_trials, gc_after_trial=True)
             pruned_trials: List[FrozenTrial] = study.get_trials(deepcopy=False, states=[TrialState.PRUNED])
             complete_trials: List[FrozenTrial] = study.get_trials(deepcopy=False, states=[TrialState.COMPLETE])
@@ -256,18 +258,6 @@ class BaseOptimiser(ABC):
             with warnings.catch_warnings():
                 # Ignore 'ExperimentalWarning' warnings from Optuna
                 warnings.simplefilter("ignore")
-                # ax: Axes = plot_slice(study)
-                # ax.set_title("Slice Plot")
-                # ax.figure.savefig(join(output_dir, "slice.png"))
-                # ax.clear()
-                # ax: Axes = plot_contour(study)
-                # ax.set_title("Contour Plot")
-                # ax.figure.savefig(join(output_dir, "contour.png"))
-                # ax.clear()
-                # ax: Axes = plot_parallel_coordinate(study)
-                # ax.set_title("Parallel Coordinate Plot")
-                # ax.figure.savefig(join(output_dir, "parallel_coordinate.png"))
-                # ax.clear()
                 ax: Axes = plot_param_importances(study)
                 ax.set_title("Parameter Importances")
                 ax.figure.savefig(join(output_dir, "param_importances.png"))
