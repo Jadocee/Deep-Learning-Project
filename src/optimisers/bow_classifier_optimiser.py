@@ -161,7 +161,17 @@ class BOWClassifierOptimiser(BaseOptimiser):
             model=model,
             dataloader = test_dataloader
         )
-
+        
+        save_path: str = join(STUDIES_DIR, trial.study.study_name, f"trial_{trial.number}_{model.get_id()}")
+        trial.set_user_attr(key="save_path", value=save_path)
+        ResultsUtils.plot_loss_and_accuracy_curves(
+            training_losses=results["train_losses"],
+            validation_losses=results["valid_losses"],
+            training_accuracies=results["train_accuracies"],
+            validation_accuracies=results["valid_accuracies"],
+            save_path=save_path
+        )
+        ResultsUtils.plot_confusion_matrix(cm=results["confusion_matrix"], save_path=save_path)
         print(f"Accuracy:{accuracy}       Loss:{loss}")
         return accuracy,loss,predictions,target
 
