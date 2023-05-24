@@ -16,7 +16,8 @@ from utils.dataset_loader import DatasetLoader
 from utils.definitions import STUDIES_DIR
 from utils.results_utils import ResultsUtils
 from utils.text_preprocessor import TextPreprocessor
-
+from sklearn.metrics import accuracy_score, precision_score, f1_score, recall_score, confusion_matrix, roc_auc_score, \
+    log_loss, make_scorer
 
 class LSTMClassifierOptimiser(BaseOptimiser):
     """
@@ -165,7 +166,7 @@ class LSTMClassifierOptimiser(BaseOptimiser):
         return results["valid_accuracies"][-1]
     
     
-    def _evaluate_test(self,trial: Trial,save_path):
+    def _evaluate_test(self,trial: Trial,save_path,number):
         self._logger.info(f"Trial number: {trial.number}")
 
         epochs: int = trial.suggest_categorical("epochs", [5, 10])
@@ -213,7 +214,23 @@ class LSTMClassifierOptimiser(BaseOptimiser):
             optimiser_name=optimiser_name,
             lr_scheduler_params=scheduler_hyperparams
         )
-        loss, accuracy,predictions,targets = trainer._evaluate(model,test_dataloader)
+        loss, accuracy,preds,targets = trainer._evaluate(model,test_dataloader)
         print(f"Accuracy:{accuracy}       Loss:{loss}")
 
+        ResultsUtils.record_performance_scores(
+            scores={
+                "accuracy": accuracy_score(y_true=targets, y_pred=preds),
+                "precision": precision_score(y_true=targets, y_pred=preds, average="macro"),
+                "f1": f1_score(y_true=targets, y_pred=preds, average="macro"),
+                "recall": recall_score(y_true=targets, y_pred=preds, average="macro"),
+            },
+            save_path=save_path,
+            appendName=number
+        )
+        
+        ResultsUtils.plot_confusion_matrix(
+        cm=confusion_matrix(y_true=targets, y_pred=preds),
+        save_path=save_path,
+        appendName=number
+        )
         return accuracy

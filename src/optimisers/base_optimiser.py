@@ -344,4 +344,4 @@ class BaseOptimiser(ABC):
                                 "hidden_size": row['params_hidden_size'],
                                 "n_layers": row['params_n_layers']})
             trial: FixedTrial = FixedTrial(params_dict)
-            self._evaluate_test(trial,join(study_name,'test_runs','_test{i}'))
+            self._evaluate_test(trial,join(STUDIES_DIR,study_name),i)
