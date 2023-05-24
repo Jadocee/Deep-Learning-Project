@@ -291,12 +291,15 @@ class BaseOptimiser(ABC):
             print(row['params_lr_scheduler'])
             if pd.notnull(row['params_lr_scheduler']):
                 if row['params_lr_scheduler'] == "MultiStepLR":
-                    n_milestones: int = row['params_n_milestones'].astype(int)
-                    milestones: List[int] = [row[f"params_milestone_{i}"].astype(
-                        int) for i in range(n_milestones)]
-                    gamma: float = row['params_gamma'].astype(float)
+                    n_milestones: int = int(row['params_n_milestones'])
+                    milestones: List[int] = [int(row[f"params_milestone_{i}"]) for i in range(n_milestones)]
+                    for i in range(n_milestones):
+                        params_dict.update(
+                            {f"milestone_{i}": milestones[i]}
+                        )
+                    gamma: float = row['params_gamma']
                     params_dict.update(
-                        {"milestones": milestones, "gamma": gamma, "lr_scheduler": "MultiStepLR"})
+                        {"n_milestones": n_milestones, "gamma": gamma, "lr_scheduler": "MultiStepLR"})
                 elif row['params_lr_scheduler'] == "ReduceLROnPlateau":
                     factor: float = row['params_factor']
                     patience: int = row['params_patience']
@@ -341,4 +344,4 @@ class BaseOptimiser(ABC):
                                 "hidden_size": row['params_hidden_size'],
                                 "n_layers": row['params_n_layers']})
             trial: FixedTrial = FixedTrial(params_dict)
-            self._evaluate_test(trial,join(STUDIES_DIR, study_name,'test_runs','_test{i}'))
+            self._evaluate_test(trial,join(study_name,'test_runs','_test{i}'))
