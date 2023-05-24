@@ -8,8 +8,8 @@
 #
 # References:
 # - "ImageNet Classification with Deep Convolutional Neural Networks" by Alex Krizhevsky et al.
-# - Code implementation by Thomas Bandy: https://github.com/dansuh17/alexnet-pytorch
-# - Blog post on AlexNet in PyTorch by Thomas Bandy: https://blog.paperspace.com/alexnet-pytorch/
+# - https://github.com/dansuh17/alexnet-pytorch
+# - https://blog.paperspace.com/alexnet-pytorch/
 #
 # Date: May 22, 2023
 
