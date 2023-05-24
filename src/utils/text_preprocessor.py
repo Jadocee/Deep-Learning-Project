@@ -334,7 +334,7 @@ class TextPreprocessor:
         if self.__vocab is None:
             raise ValueError("No vocabulary has been created. Please create a vocabulary before encoding.")
         encoded: ndarray = zeros(len(self.__vocab), dtype=int)
-        encoded[[str(token) for token in tokens if token < len(self.__vocab)]] = 1
+        encoded[[self.__vocab[str(token)] for token in tokens]] = 1
         return encoded
 
     def one_hot_encode(self, tokens: List[str]) -> ndarray:
@@ -433,27 +433,27 @@ class TextPreprocessor:
         )
 
         if self.__encode:
-            # dataset_dict = dataset_dict.map(
-            #     lambda example: {"ids": self.encode_batch(example["ids"])},
-            #     batched=True
-            # )
+           dataset_dict = dataset_dict.map(
+                lambda example: {"ids": self.encode_batch(example["ids"])},
+                batched=True
+            )
 
-            train_data = dataset_dict["train"]
-            val_data = dataset_dict["validation"]
-            test_data = dataset_dict["test"]
+            # train_data = dataset_dict["train"]
+            # val_data = dataset_dict["validation"]
+            # test_data = dataset_dict["test"]
 
-            def multi_hot(example, num_classes):
-                encoded = zeros((num_classes,))
-                encoded[example["ids"]] = 1
-                return {"multi_hot": encoded}
+            # def multi_hot(example, num_classes):
+            #     encoded = zeros((num_classes,))
+            #     encoded[example["ids"]] = 1
+            #     return {"multi_hot": encoded}
 
-            train_data = train_data.map(multi_hot, fn_kwargs={"num_classes": len(self.__vocab)})
-            val_data = val_data.map(multi_hot, fn_kwargs={"num_classes": len(self.__vocab)})
-            test_data = test_data.map(multi_hot, fn_kwargs={"num_classes": len(self.__vocab)})
+            # train_data = train_data.map(multi_hot, fn_kwargs={"num_classes": len(self.__vocab)})
+            # val_data = val_data.map(multi_hot, fn_kwargs={"num_classes": len(self.__vocab)})
+            # test_data = test_data.map(multi_hot, fn_kwargs={"num_classes": len(self.__vocab)})
 
-            dataset_dict["train"] = train_data
-            dataset_dict["validation"] = val_data
-            dataset_dict["test"] = test_data
+            # dataset_dict["train"] = train_data
+            # dataset_dict["validation"] = val_data
+            # dataset_dict["test"] = test_data
 
         dataset_dict.set_format(type="torch", columns=["ids", "label"])
         return dataset_dict

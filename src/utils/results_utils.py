@@ -34,14 +34,14 @@ class ResultsUtils:
         ResultsUtils.__save_plot("loss_and_accuracy_curves.png", save_path)
 
     @staticmethod
-    def plot_confusion_matrix(cm: ndarray, save_path: str) -> None:
+    def plot_confusion_matrix(cm: ndarray, save_path: str, appendName: str ='') -> None:
         heatmap(cm, annot=True, fmt="d", cmap="Blues")
         plt.xlabel("Predicted")
         plt.ylabel("Actual")
-        ResultsUtils.__save_plot("confusion_matrix.png", save_path)
+        ResultsUtils.__save_plot(f"confusion_matrix{appendName}.png", save_path)
 
     @staticmethod
-    def record_performance_scores(scores: Dict[str, float], save_path: str) -> None:
+    def record_performance_scores(scores: Dict[str, float], save_path: str, appendName: str = '') -> None:
         DataFrame(scores, index=[0]) \
             .rename(columns={"accuracy": "Accuracy", "precision": "Precision",
                              "recall": "Recall", "f1": "F1", "roc_auc": "AUC", "log_loss": "Log Loss"}) \
@@ -49,4 +49,4 @@ class ResultsUtils:
             .transpose() \
             .rename(columns={0: "Value"}) \
             .rename_axis("Score") \
-            .to_csv(join(save_path, "performance_scores.csv"), index=True, header=True)
+            .to_csv(join(save_path, f"performance_scores{appendName}.csv"), index=True, header=True)

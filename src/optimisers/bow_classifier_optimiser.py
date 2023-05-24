@@ -22,7 +22,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 from utils.results_utils import ResultsUtils
-
+from sklearn.metrics import accuracy_score, precision_score, f1_score, recall_score, confusion_matrix, roc_auc_score, \
+    log_loss, make_scorer
 from utils.text_preprocessor import TextPreprocessor
 
 
@@ -111,7 +112,7 @@ class BOWClassifierOptimiser(BaseOptimiser):
         
         return results["valid_accuracies"][-1]
 
-    def _evaluate_test(self, trial: Trial,save_path):
+    def _evaluate_test(self, trial: Trial,save_path,number):
           # Suggestions for hyperparameters
         epochs: int = trial.suggest_categorical("epochs", [5, 10, 20])
         learning_rate: float = trial.suggest_float(
@@ -157,13 +158,29 @@ class BOWClassifierOptimiser(BaseOptimiser):
             lr_scheduler_params=scheduler_hyperparams
         )
 
-        loss,accuracy,predictions,target = trainer._evaluate(
+        loss,accuracy,preds,targets = trainer._evaluate(
             model=model,
             dataloader = test_dataloader
         )
 
+        ResultsUtils.record_performance_scores(
+                scores={
+                    "accuracy": accuracy_score(y_true=targets, y_pred=preds),
+                    "precision": precision_score(y_true=targets, y_pred=preds, average="macro"),
+                    "f1": f1_score(y_true=targets, y_pred=preds, average="macro"),
+                    "recall": recall_score(y_true=targets, y_pred=preds, average="macro"),
+                },
+                save_path=save_path,
+                appendName = number
+            )
+        
+        ResultsUtils.plot_confusion_matrix(
+            cm=confusion_matrix(y_true=targets, y_pred=preds),
+            save_path=save_path,
+            appendName = number
+        )
         print(f"Accuracy:{accuracy}       Loss:{loss}")
-        return accuracy,loss,predictions,target
+        return accuracy,loss,preds,targets
 
     @staticmethod
     def analyseOptimizerImpact(studyname):
