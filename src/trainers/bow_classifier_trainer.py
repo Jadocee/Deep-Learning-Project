@@ -1,15 +1,14 @@
-from typing import Dict, List, Optional
+from typing import List
 
 import numpy as np
-from pandas import DataFrame
 import torch
+from pandas import DataFrame
 from torch import Tensor
-from optuna import Trial
+from torch import sum as t_sum
 from torch.nn import CrossEntropyLoss
+from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from torchtext.vocab import Vocab
-from torch.optim import Optimizer
-from torch import sum as t_sum
 
 from models.bow_model import BOWModel
 from trainers.base_trainer import BaseTrainer
@@ -18,6 +17,7 @@ from utils.hyperparam_utils import HyperParamUtils
 
 class BOWClassifierTrainer(BaseTrainer):
     __vocab: Vocab
+
     def save(self):
         raise NotImplementedError
 
@@ -31,7 +31,7 @@ class BOWClassifierTrainer(BaseTrainer):
         self.__vocab = vocab
         self.__pad_index = vocab["<pad>"]
 
-    def _evaluate(self,model:BOWModel, dataloader, loss_fn = CrossEntropyLoss()):
+    def _evaluate(self, model: BOWModel, dataloader, loss_fn=CrossEntropyLoss()):
         model.eval()
         losses, accuracies = [], []
         predictions: np.ndarray = np.ndarray(shape=(0,), dtype=int)
@@ -77,7 +77,7 @@ class BOWClassifierTrainer(BaseTrainer):
             y_pred: Tensor = preds.argmax(dim=1)
             accuracy: Tensor = t_sum((y_pred == labels)) / labels.shape[0]
             accuracies.append(accuracy.detach().cpu().numpy())
-            
+
         return np.mean(losses), np.mean(accuracies)
 
     def run(self,
@@ -91,7 +91,7 @@ class BOWClassifierTrainer(BaseTrainer):
             optimiser_name=optimiser_name,
             model_params=model.get_parameters(),
             learning_rate=learning_rate
-            )
+        )
         loss_fn = CrossEntropyLoss()
         # Train the model and evaluate on the validation set
         train_losses: List[float] = list()
@@ -110,7 +110,8 @@ class BOWClassifierTrainer(BaseTrainer):
             valid_accuracies.append(valid_accuracy)
 
             df: DataFrame = DataFrame({"Epoch": f"{epoch + 1:02}/{epochs:02}", "Train Loss": f"{train_loss:.3f}",
-                                       "Train Accuracy": f"{train_accuracy * 100:.2f}%", "Valid Loss": f"{valid_loss:.3f}",
+                                       "Train Accuracy": f"{train_accuracy * 100:.2f}%",
+                                       "Valid Loss": f"{valid_loss:.3f}",
                                        "Valid Accuracy": f"{valid_accuracy * 100:.2f}%"}, index=[0])
 
             print(df.to_string(index=False, header=(epoch == 0), justify="center", col_space=15))
@@ -118,5 +119,4 @@ class BOWClassifierTrainer(BaseTrainer):
             # print("Epoch {}: train_loss={:.4f}, train_accuracy={:.4f}, valid_loss={:.4f}, valid_accuracy={:.4f}".format(
             #     epoch + 1, train_loss, train_accuracy, valid_loss, valid_accuracy))
 
-        return valid_accuracies[-1],valid_losses[-1]
-
+        return valid_accuracies[-1], valid_losses[-1]

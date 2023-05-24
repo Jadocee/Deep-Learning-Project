@@ -2,11 +2,10 @@ from os import system, name
 from os.path import exists, join
 from pathlib import Path
 from typing import Dict, List, Final, Any
-import torch
 
+import torch
 from optuna.trial import FixedTrial
 from pandas import read_csv, DataFrame, Series
-from pandas._testing import loc
 from torch.cuda import is_available as has_cuda, empty_cache
 
 from optimisers.bow_classifier_optimiser import BOWClassifierOptimiser
@@ -57,7 +56,7 @@ class Main:
             "Evaluate Top 3 Models on Test Set"
         ],
         "BOW Trainer Menu": [
-            "Run Bag Of Words", 
+            "Run Bag Of Words",
             "Validate Top 10 Models",
             "Evaluate Top 3 Models on Test Set",
             "General Analysis"
@@ -180,7 +179,7 @@ class Main:
                     system("cls" if name == "nt" else "clear")
                     optimiser: LSTMClassifierOptimiser = LSTMClassifierOptimiser(device=Main.DEVICE)
                     optimiser.run(n_trials=120)
-                elif choice == 2:  
+                elif choice == 2:
                     optimiser: LSTMClassifierOptimiser = LSTMClassifierOptimiser(device=Main.DEVICE)
                     study_name: str = input(
                         "Please enter study name to evaluate Test Set:"
@@ -196,7 +195,7 @@ class Main:
                     current_menu = "Main Menu"
                 elif choice == 1:
                     optimiser.run(n_trials=120)
-                elif choice == 2:  
+                elif choice == 2:
                     study_name: str = input(
                         "Please enter study to validate:"
                     )
@@ -206,7 +205,7 @@ class Main:
                         "Please enter study name to evaluate Test Set:"
                     )
                     trial = optimiser.create_fixed_trial(study_name)
-                elif choice == 4: 
+                elif choice == 4:
                     study_name: str = input(
                         "Please enter study to validate:"
                     )
@@ -227,8 +226,8 @@ class Main:
                 elif choice == 2:
                     df: DataFrame = \
                         read_csv(join(STUDIES_DIR, "PretrainedOptimiser_2023-05-23_16-09-28", "results.csv")) \
-                        .sort_values(by="value", ascending=False) \
-                        .head(1)
+                            .sort_values(by="value", ascending=False) \
+                            .head(1)
                     best_trial_row: Series = df.iloc[0]
                     param_dict: Dict[str, Any] = dict()
                     param_dict.update({
@@ -271,37 +270,9 @@ class Main:
 
         This method performs the initial setup and then launches the command-line interface.
         """
-        # Check if CUDA cache needs to be cleared
         Main.__initial_setup()
         Main.__switch_menu()
 
 
 if __name__ == "__main__":
     Main.main()
-
-# --------------- Thomas ---------------#
-# TODO: Uncomment and integrate with main.py
-# Packaged with - dataset.py, resnet.py, resnet_trainer.py
-# Author - Thomas Bandy (c3374048)
-
-# from Util.train import Train
-# from Util import util
-# learn_rates = [0.0001, 0.001, 0.01]
-# epochs = [5, 10, 50]
-# widths = [10, 50, 100, 500]
-# activation_function = ['ReLU', 'Sigmoid', 'CeLU']
-# test = Train()
-
-# test.prepare_data()
-# util.print_checks(test.train_data, test.valid_data, test.test_data, test.train_loader, test.valid_loader, test.test_loader)
-# test.begin_training(10, 2, 0.001)
-
-# --------------- Test all hyper-params ---------------#
-# for (w, e, lr) in widths, epochs, learn_rates:
-#     test = Train()
-#     test.prepare_data()
-#     util.print_checks(test.train_data, test.valid_data, test.test_data, test.train_loader, test.valid_loader, test.test_loader)
-#     test.begin_training(w, e, lr)
-
-# --------------- Metrics ---------------#
-# util.loss_acc_diagram(test.train_losses, test.val_losses, test.train_accs, test.val_accs)

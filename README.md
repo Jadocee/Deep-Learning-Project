@@ -18,7 +18,7 @@ To run the inference script and generate predictions for individual images, foll
 3. Once you have placed the test images and installed the dependencies, you can run the inference script. The script is located at `src/utils/inference_script.py`. Run the script by executing the following command:
 
    ```
-   python src/utils/inference_script.py
+   python ./src/inference/inference_script.py
    ```
 
    This command will execute the script and perform inference on the test images using a pretrained model.

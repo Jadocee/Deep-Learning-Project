@@ -1,14 +1,14 @@
 from os.path import join
 from typing import Tuple, Dict, List, Optional, Any
 
+from datasets import DatasetDict, Dataset
 from optuna import Trial
-import pandas as pd
+from sklearn.metrics import accuracy_score, precision_score, f1_score, recall_score, confusion_matrix
 from torch import Tensor, stack
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader
 from torchtext.vocab import Vocab
 
-from datasets import DatasetDict, Dataset
 from models.lstm_model import LSTMModel
 from optimisers.base_optimiser import BaseOptimiser
 from trainers.lstm_classifier_trainer import LSTMClassifierTrainer
@@ -16,8 +16,7 @@ from utils.dataset_loader import DatasetLoader
 from utils.definitions import STUDIES_DIR
 from utils.results_utils import ResultsUtils
 from utils.text_preprocessor import TextPreprocessor
-from sklearn.metrics import accuracy_score, precision_score, f1_score, recall_score, confusion_matrix, roc_auc_score, \
-    log_loss, make_scorer
+
 
 class LSTMClassifierOptimiser(BaseOptimiser):
     """
@@ -164,9 +163,8 @@ class LSTMClassifierOptimiser(BaseOptimiser):
         )
         ResultsUtils.plot_confusion_matrix(cm=results["confusion_matrix"], save_path=save_path)
         return results["valid_accuracies"][-1]
-    
-    
-    def _evaluate_test(self,trial: Trial,save_path,number):
+
+    def _evaluate_test(self, trial: Trial, save_path, number):
         self._logger.info(f"Trial number: {trial.number}")
 
         epochs: int = trial.suggest_categorical("epochs", [5, 10])
@@ -184,7 +182,6 @@ class LSTMClassifierOptimiser(BaseOptimiser):
         scheduler_hyperparams: Optional[Dict[str, Any]] = self._define_scheduler_hyperparams(trial)
 
         self._logger.info(f"Selected hyperparameters: {trial.params.__str__()}")
-
 
         train_dataloader, valid_dataloader, test_dataloader = self._prepare_data(batch_size=batch_size, max_tokens=1000)
         model: LSTMModel = LSTMModel(
@@ -214,7 +211,7 @@ class LSTMClassifierOptimiser(BaseOptimiser):
             optimiser_name=optimiser_name,
             lr_scheduler_params=scheduler_hyperparams
         )
-        loss, accuracy,preds,targets = trainer._evaluate(model,test_dataloader)
+        loss, accuracy, preds, targets = trainer._evaluate(model, test_dataloader)
         print(f"Accuracy:{accuracy}       Loss:{loss}")
 
         ResultsUtils.record_performance_scores(
@@ -227,10 +224,10 @@ class LSTMClassifierOptimiser(BaseOptimiser):
             save_path=save_path,
             appendName=number
         )
-        
+
         ResultsUtils.plot_confusion_matrix(
-        cm=confusion_matrix(y_true=targets, y_pred=preds),
-        save_path=save_path,
-        appendName=number
+            cm=confusion_matrix(y_true=targets, y_pred=preds),
+            save_path=save_path,
+            appendName=number
         )
         return accuracy

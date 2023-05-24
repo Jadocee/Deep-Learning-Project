@@ -4,14 +4,12 @@ from typing import Tuple, Optional, List
 
 import evaluate
 import torch
-from optuna.trial import FixedTrial
-
 from datasets import DatasetDict
 from evaluate import EvaluationModule
 from numpy import ndarray, mean, concatenate
 from optuna import Trial, TrialPruned
-from sklearn.metrics import accuracy_score, precision_score, f1_score, recall_score, confusion_matrix, roc_auc_score, \
-    log_loss, make_scorer
+from optuna.trial import FixedTrial
+from sklearn.metrics import accuracy_score, precision_score, f1_score, recall_score, confusion_matrix
 from torch import no_grad, argmax, Tensor, FloatTensor
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
@@ -28,13 +26,46 @@ from utils.results_utils import ResultsUtils
 
 
 class PretrainedOptimiser(BaseOptimiser):
+    """
+    Optimiser for pretrained models.
+
+    This class extends the `BaseOptimiser` to provide additional support for
+    pretrained models, such as data preparation, testing, and evaluation methods.
+
+    Attributes:
+        __pretrained_model_name (str): The name of the pretrained model.
+    """
+
     __pretrained_model_name: str
 
     def __init__(self, model_name: str, device: str = "cpu"):
+        """
+        Initialise the PretrainedOptimiser with a given model name and device.
+
+        Args:
+            model_name (str): The name of the pretrained model.
+            device (str, optional): The device on which the model will be running. Defaults to "cpu".
+
+        """
         super().__init__(device=device)
         self.__pretrained_model_name = model_name
 
     def _prepare_data(self, batch_size: int, max_tokens: int) -> Tuple[DataLoader, DataLoader, DataLoader]:
+        """
+        Prepare the data for the model.
+
+        This method loads a dataset, tokenises it, and prepares it for input into the model. It also constructs
+        DataLoaders for the training, validation, and test sets.
+
+        Args:
+            batch_size (int): The batch size for the DataLoader.
+            max_tokens (int): The maximum number of tokens for the tokenizer.
+
+        Returns:
+            Tuple[DataLoader, DataLoader, DataLoader]: A tuple of three DataLoaders for the training, validation,
+            and test sets respectively.
+        """
+
         dataset_dict: DatasetDict = DatasetLoader.get_tweet_topic_single_dataset()
         tokenizer = AutoTokenizer.from_pretrained(self.__pretrained_model_name)
         dataset_dict = dataset_dict.map(
@@ -51,6 +82,17 @@ class PretrainedOptimiser(BaseOptimiser):
         return train_dataloader, valid_dataloader, test_dataloader
 
     def test_model(self, trial: FixedTrial) -> None:
+        """
+        Test the model with the specified parameters.
+
+        This method tests the model with a set of parameters suggested by the provided trial. It prepares the
+        data, trains the model, and then evaluates it on the test set, recording the performance.
+
+        Args:
+            trial (FixedTrial): The trial containing the parameters to test.
+
+        """
+
         optimiser_name: str = trial.suggest_categorical("optimiser", ["AdamW", "Adam"])
         lr: float = trial.suggest_float("lr", 1e-6, 1e-4, log=True)
         batch_size: int = trial.suggest_int("batch_size", 8, 32, step=8)
@@ -103,36 +145,15 @@ class PretrainedOptimiser(BaseOptimiser):
         save_path: str = join(STUDIES_DIR,
                               f"Test_{self.__pretrained_model_name}_{datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}")
 
-        custom_score = make_scorer(roc_auc_score, multi_class="ovo", needs_proba=True)
-        auc_score: Optional[float] = None
-        try:
-            auc_score = custom_score(y_true=targets, y_score=preds)
-        except ValueError:
-            pass
-
-        if auc_score is not None:
-            ResultsUtils.record_performance_scores(
-                scores={
-                    "accuracy": accuracy_score(y_true=targets, y_pred=preds),
-                    "precision": precision_score(y_true=targets, y_pred=preds, average="macro"),
-                    "f1": f1_score(y_true=targets, y_pred=preds, average="macro"),
-                    "recall": recall_score(y_true=targets, y_pred=preds, average="macro"),
-                    "roc_auc": custom_score(y_true=targets, y_score=preds),
-                    "log_loss": log_loss(y_true=targets, y_pred=preds),
-                },
-                save_path=save_path
-            )
-        else:
-            ResultsUtils.record_performance_scores(
-                scores={
-                    "accuracy": accuracy_score(y_true=targets, y_pred=preds),
-                    "precision": precision_score(y_true=targets, y_pred=preds, average="macro"),
-                    "f1": f1_score(y_true=targets, y_pred=preds, average="macro"),
-                    "recall": recall_score(y_true=targets, y_pred=preds, average="macro"),
-                    "log_loss": log_loss(y_true=targets, y_pred=preds),
-                },
-                save_path=save_path
-            )
+        ResultsUtils.record_performance_scores(
+            scores={
+                "accuracy": accuracy_score(y_true=targets, y_pred=preds),
+                "precision": precision_score(y_true=targets, y_pred=preds, average="macro"),
+                "f1": f1_score(y_true=targets, y_pred=preds, average="macro"),
+                "recall": recall_score(y_true=targets, y_pred=preds, average="macro"),
+            },
+            save_path=save_path
+        )
 
         ResultsUtils.plot_confusion_matrix(
             cm=confusion_matrix(y_true=targets, y_pred=preds),
@@ -140,6 +161,21 @@ class PretrainedOptimiser(BaseOptimiser):
         )
 
     def _objective(self, trial: Trial) -> float:
+        """
+        Defines the objective function for the optimisation trial.
+
+        This method describes the steps and evaluation criteria for a single optimisation trial. It trains the
+        model with the parameters provided by the trial, evaluates it on the validation set, and returns the
+        accuracy as the objective to be maximised.
+
+        Args:
+            trial (Trial): The trial containing the parameters for this run.
+
+        Returns:
+            float: The accuracy of the model on the validation set.
+
+        """
+
         batch_size: int = trial.suggest_categorical("batch_size", [8])
         epochs: int = trial.suggest_categorical("epochs", [10])
         lr: float = trial.suggest_float("lr", 1e-6, 1e-4, log=True)

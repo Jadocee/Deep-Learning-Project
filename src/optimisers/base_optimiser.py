@@ -7,17 +7,18 @@ from os.path import join
 from pathlib import Path
 from sys import stdout
 from typing import List, Optional, Dict, Any, Tuple, Final, Set
+
 import pandas as pd
 from matplotlib.axes import Axes
 from optuna import Trial, Study, create_study
 from optuna import logging as optuna_logging
 from optuna.pruners import MedianPruner, NopPruner, BasePruner, HyperbandPruner
 from optuna.study import StudyDirection
+from optuna.trial import FixedTrial
 from optuna.trial import FrozenTrial, TrialState
 from optuna.visualization.matplotlib import plot_param_importances, plot_optimization_history
 from pandas import DataFrame
 from torch.utils.data import DataLoader
-from optuna.trial import FixedTrial
 from tqdm import tqdm
 
 from trainers.base_trainer import BaseTrainer
@@ -277,13 +278,12 @@ class BaseOptimiser(ABC):
         except KeyboardInterrupt:
             print("Keyboard interrupt detected. Stopping the optimization.")
 
-        
-    def create_fixed_trial(self,study_name):
+    def create_fixed_trial(self, study_name):
         # Read the CSV file
         df: DataFrame = pd.read_csv(join(STUDIES_DIR, study_name, "results.csv")) \
-            .astype({'params_learning_rate': float,  'params_epochs': int,
-                    'params_batch_size': int, 'params_optimiser': str, "params_hidden_size": int,
-                    "params_n_layers": int}) \
+            .astype({'params_learning_rate': float, 'params_epochs': int,
+                     'params_batch_size': int, 'params_optimiser': str, "params_hidden_size": int,
+                     "params_n_layers": int}) \
             .sort_values(by=["value"], ascending=False) \
             .head(3)
         for i, row in df.iterrows():
@@ -335,7 +335,7 @@ class BaseOptimiser(ABC):
                 params_dict.update({"embedding_dim": row['params_embedding_dim']})
             if "params_bidirectional" in row:
                 params_dict.update({"bidirectional": row['params_bidirectional']})
-            if 'params_max_tokens' in row: 
+            if 'params_max_tokens' in row:
                 params_dict.update({"max_tokens": row['params_max_tokens']})
             params_dict.update({"learning_rate": row['params_learning_rate'],
                                 "epochs": row['params_epochs'],
@@ -344,4 +344,4 @@ class BaseOptimiser(ABC):
                                 "hidden_size": row['params_hidden_size'],
                                 "n_layers": row['params_n_layers']})
             trial: FixedTrial = FixedTrial(params_dict)
-            self._evaluate_test(trial,join(STUDIES_DIR,study_name),i)
+            self._evaluate_test(trial, join(STUDIES_DIR, study_name), i)

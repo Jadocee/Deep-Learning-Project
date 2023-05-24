@@ -1,16 +1,10 @@
-from optuna.trial import FixedTrial
-import csv
-from itertools import chain
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Optional, Tuple
 
-from nltk.lm import Vocabulary
-from numpy import mean
 from optuna import Trial
 import pandas as pd
 from torch.utils.data import DataLoader
 from torchtext.vocab import Vocab
 from os.path import join
-from datasets import DatasetDict, Dataset
 
 from datasets import DatasetDict
 from models.bow_model import BOWModel
@@ -19,11 +13,9 @@ from trainers.bow_classifier_trainer import BOWClassifierTrainer
 from utils.dataset_loader import DatasetLoader
 from utils.definitions import STUDIES_DIR
 import matplotlib.pyplot as plt
-import numpy as np
 import seaborn as sns
 from utils.results_utils import ResultsUtils
-from sklearn.metrics import accuracy_score, precision_score, f1_score, recall_score, confusion_matrix, roc_auc_score, \
-    log_loss, make_scorer
+from sklearn.metrics import accuracy_score, precision_score, f1_score, recall_score, confusion_matrix
 from utils.text_preprocessor import TextPreprocessor
 
 
@@ -50,8 +42,6 @@ class BOWClassifierOptimiser(BaseOptimiser):
         test_dataloader = DataLoader(
             dataset=dataset_dict["test"], batch_size=batch_size)
 
-    
-
         return train_dataloader, valid_dataloader, test_dataloader
 
     def _objective(self, trial: Trial) -> float:
@@ -64,21 +54,21 @@ class BOWClassifierOptimiser(BaseOptimiser):
             "max_tokens", [100, 200, 300, 400, 500, 600])
         optimiser_name: str = trial.suggest_categorical(
             "optimiser", ["Adam", "RMSprop", "SGD", "Adagrad"])
-        hidden_size: int = trial.suggest_categorical("hidden_size", [64,128,256])
-        n_layers: int = trial.suggest_categorical("n_layers", [2,4,6])
+        hidden_size: int = trial.suggest_categorical("hidden_size", [64, 128, 256])
+        n_layers: int = trial.suggest_categorical("n_layers", [2, 4, 6])
         scheduler_hyperparams: Optional[Dict[str, Any]] = self._define_scheduler_hyperparams(trial)
 
         # Load and preprocess the data
         train_dataloader, valid_dataloader, test_dataloader = self._prepare_data(batch_size=batch_size,
-                                                                                  max_tokens=max_tokens)
+                                                                                 max_tokens=max_tokens)
 
         # Create the model
         model: BOWModel = BOWModel(
             vocab_size=len(self.__vocab),
             output_size=6,
-            n_layers = n_layers,
-            layer_size = hidden_size,
-            device= self._device
+            n_layers=n_layers,
+            layer_size=hidden_size,
+            device=self._device
         )
 
         # Create the trainer
@@ -109,11 +99,11 @@ class BOWClassifierOptimiser(BaseOptimiser):
             save_path=save_path
         )
         ResultsUtils.plot_confusion_matrix(cm=results["confusion_matrix"], save_path=save_path)
-        
+
         return results["valid_accuracies"][-1]
 
-    def _evaluate_test(self, trial: Trial,save_path,number):
-          # Suggestions for hyperparameters
+    def _evaluate_test(self, trial: Trial, save_path, number):
+        # Suggestions for hyperparameters
         epochs: int = trial.suggest_categorical("epochs", [5, 10, 20])
         learning_rate: float = trial.suggest_float(
             "learning_rate", 1e-5, 1e-1, log=True)
@@ -122,21 +112,21 @@ class BOWClassifierOptimiser(BaseOptimiser):
             "max_tokens", [100, 200, 300, 400, 500, 600])
         optimiser_name: str = trial.suggest_categorical(
             "optimiser", ["Adam", "RMSprop", "SGD", "Adagrad"])
-        hidden_size: int = trial.suggest_categorical("hidden_size", [64,128,256])
-        n_layers: int = trial.suggest_categorical("n_layers", [2,4,6])
+        hidden_size: int = trial.suggest_categorical("hidden_size", [64, 128, 256])
+        n_layers: int = trial.suggest_categorical("n_layers", [2, 4, 6])
         scheduler_hyperparams: Optional[Dict[str, Any]] = self._define_scheduler_hyperparams(trial)
 
         # Load and preprocess the data
         train_dataloader, valid_dataloader, test_dataloader = self._prepare_data(batch_size=batch_size,
-                                                                                  max_tokens=max_tokens)
+                                                                                 max_tokens=max_tokens)
 
         # Create the model
         model: BOWModel = BOWModel(
             vocab_size=len(self.__vocab),
             output_size=6,
-            n_layers = n_layers,
-            layer_size = hidden_size,
-            device= self._device
+            n_layers=n_layers,
+            layer_size=hidden_size,
+            device=self._device
         )
 
         # Create the trainer
@@ -158,29 +148,29 @@ class BOWClassifierOptimiser(BaseOptimiser):
             lr_scheduler_params=scheduler_hyperparams
         )
 
-        loss,accuracy,preds,targets = trainer._evaluate(
+        loss, accuracy, preds, targets = trainer._evaluate(
             model=model,
-            dataloader = test_dataloader
+            dataloader=test_dataloader
         )
 
         ResultsUtils.record_performance_scores(
-                scores={
-                    "accuracy": accuracy_score(y_true=targets, y_pred=preds),
-                    "precision": precision_score(y_true=targets, y_pred=preds, average="macro"),
-                    "f1": f1_score(y_true=targets, y_pred=preds, average="macro"),
-                    "recall": recall_score(y_true=targets, y_pred=preds, average="macro"),
-                },
-                save_path=save_path,
-                appendName = number
-            )
-        
+            scores={
+                "accuracy": accuracy_score(y_true=targets, y_pred=preds),
+                "precision": precision_score(y_true=targets, y_pred=preds, average="macro"),
+                "f1": f1_score(y_true=targets, y_pred=preds, average="macro"),
+                "recall": recall_score(y_true=targets, y_pred=preds, average="macro"),
+            },
+            save_path=save_path,
+            appendName=number
+        )
+
         ResultsUtils.plot_confusion_matrix(
             cm=confusion_matrix(y_true=targets, y_pred=preds),
             save_path=save_path,
-            appendName = number
+            appendName=number
         )
         print(f"Accuracy:{accuracy}       Loss:{loss}")
-        return accuracy,loss,preds,targets
+        return accuracy, loss, preds, targets
 
     @staticmethod
     def analyseOptimizerImpact(studyname):

@@ -3,9 +3,9 @@ from os import getenv, environ
 from os.path import join, exists
 from typing import Dict, Final
 
+from datasets import load_dataset, Dataset, DatasetDict, load_from_disk
 from torchvision.transforms import Compose, RandomResizedCrop, RandomHorizontalFlip, ToTensor, Resize
 
-from datasets import load_dataset, Dataset, DatasetDict, load_from_disk
 from custom_datasets.cnn_custom_dataset import CNNCustomDataset
 from utils.definitions import DATA_DIR
 
