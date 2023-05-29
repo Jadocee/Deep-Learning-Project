@@ -222,7 +222,7 @@ class BaseOptimiser(ABC):
                 accurate optimisation, but will take longer. Defaults to 100.
 
         Returns:
-            No
+            None
 
         References:
             - https://optuna.readthedocs.io/en/stable/reference/generated/optuna.pruners.HyperbandPruner.html
