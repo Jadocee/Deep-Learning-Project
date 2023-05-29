@@ -82,9 +82,9 @@ class DatasetLoader:
 
         train_dataset: CNNCustomDataset = CNNCustomDataset(data_dir=join(dataset_path, "seg_train", "seg_train"),
                                                            transform=train_transforms)
-        valid_dataset: CNNCustomDataset = CNNCustomDataset(data_dir=join(dataset_path, "seg_test", "seg_test"),
+        test_dataset: CNNCustomDataset = CNNCustomDataset(data_dir=join(dataset_path, "seg_test", "seg_test"),
                                                            transform=eval_transforms)
-        test_dataset: CNNCustomDataset = CNNCustomDataset(data_dir=join(dataset_path, "seg_pred", "seg_pred"),
+        valid_dataset: CNNCustomDataset = CNNCustomDataset(data_dir=join(dataset_path, "seg_pred", "seg_pred"),
                                                           transform=eval_transforms)
 
         return {
